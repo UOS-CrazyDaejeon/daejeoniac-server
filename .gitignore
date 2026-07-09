@@ -74,3 +74,7 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### Spring Boot Local Config ###
+src/main/resources/application.properties
+src/main/resources/application-local.properties

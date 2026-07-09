@@ -1,9 +1,48 @@
 HELP.md
+
+### Gradle ###
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+### Spring Boot / Local Config ###
+.env
+.env.*
+*.env
+
+# 로컬/비밀 설정 파일
+src/main/resources/application-local.properties
+src/main/resources/application-local.yml
+src/main/resources/application-secret.properties
+src/main/resources/application-secret.yml
+src/main/resources/application-dev.properties
+src/main/resources/application-dev.yml
+
+# 운영 환경 설정을 로컬에 두는 경우
+src/main/resources/application-prod.properties
+src/main/resources/application-prod.yml
+
+### Logs ###
+logs/
+*.log
+*.log.*
+log/
+
+### Upload / Runtime Files ###
+uploads/
+upload/
+files/
+tmp/
+temp/
+
+### OS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
 
 ### STS ###
 .apt_generated
@@ -26,12 +65,12 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+### VS Code ###
+.vscode/
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-
-### VS Code ###
-.vscode/

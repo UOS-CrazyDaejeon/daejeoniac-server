@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonRestaurantItemResponse {
+public class RestaurantItemResponse {
 
     @JsonProperty("소재지(도로명)")
     private String roadAddress; // 도로명 주소

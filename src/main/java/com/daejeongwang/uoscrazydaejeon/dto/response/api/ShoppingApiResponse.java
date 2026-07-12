@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonTourspotApiResponse {
+public class ShoppingApiResponse {
 
     private Response response;
 
@@ -20,7 +20,7 @@ public class DaejeonTourspotApiResponse {
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Body {
-        private List<DaejeonTourspotItemResponse> items;
+        private List<ShoppingItemResponse> items;
         private Integer totalCount;
     }
 }

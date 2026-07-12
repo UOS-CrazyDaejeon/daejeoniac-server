@@ -1,11 +1,11 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
-import com.daejeongwang.uoscrazydaejeon.client.DaejeonRestaurantApiClient;
-import com.daejeongwang.uoscrazydaejeon.client.DaejeonShoppingApiClient;
-import com.daejeongwang.uoscrazydaejeon.client.DaejeonTourspotApiClient;
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonRestaurantItemResponse;
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonShoppingItemResponse;
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonTourspotItemResponse;
+import com.daejeongwang.uoscrazydaejeon.client.RestaurantApiClient;
+import com.daejeongwang.uoscrazydaejeon.client.ShoppingApiClient;
+import com.daejeongwang.uoscrazydaejeon.client.TourspotApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.RestaurantItemResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.ShoppingItemResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.TourspotItemResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.AllArgsConstructor;
@@ -18,9 +18,9 @@ import java.util.List;
 @AllArgsConstructor
 public class PlaceService {
 
-    private final DaejeonShoppingApiClient daejeonShoppingApiClient;
-    private final DaejeonTourspotApiClient daejeonTourspotApiClient;
-    private final DaejeonRestaurantApiClient daejeonRestaurantApiClient;
+    private final ShoppingApiClient shoppingApiClient;
+    private final TourspotApiClient tourspotApiClient;
+    private final RestaurantApiClient restaurantApiClient;
 
     private final PlaceRepository placeRepository;
 
@@ -32,9 +32,9 @@ public class PlaceService {
     }
 
     public void syncShoppingPlaces() {
-        List<DaejeonShoppingItemResponse> response = daejeonShoppingApiClient.fetchShopping();
+        List<ShoppingItemResponse> response = shoppingApiClient.fetchShopping();
 
-        for(DaejeonShoppingItemResponse shopping : response) {
+        for(ShoppingItemResponse shopping : response) {
             Place place = convertShoppingToEntity(shopping);
 
             if(!placeRepository.existsByPlaceNameAndPlaceAddressAndCategoryLarge(place.getPlaceName(), place.getPlaceAddress(), place.getCategoryLarge()))
@@ -43,9 +43,9 @@ public class PlaceService {
     }
 
     public void syncTourspotPlaces() {
-        List<DaejeonTourspotItemResponse> response = daejeonTourspotApiClient.fetchTourspot();
+        List<TourspotItemResponse> response = tourspotApiClient.fetchTourspot();
 
-        for(DaejeonTourspotItemResponse tourspot : response) {
+        for(TourspotItemResponse tourspot : response) {
             Place place = convertTourspotToEntity(tourspot);
 
             if(!placeRepository.existsByPlaceNameAndPlaceAddressAndCategoryLarge(place.getPlaceName(), place.getPlaceAddress(), place.getCategoryLarge()))
@@ -54,9 +54,9 @@ public class PlaceService {
     }
 
     public void syncRestaurantPlaces() {
-        List<DaejeonRestaurantItemResponse> response = daejeonRestaurantApiClient.fetchRestaurants();
+        List<RestaurantItemResponse> response = restaurantApiClient.fetchRestaurants();
 
-        for(DaejeonRestaurantItemResponse restaurant : response) {
+        for(RestaurantItemResponse restaurant : response) {
             Place place = convertRestaurantToEntity(restaurant);
 
             if(!placeRepository.existsByPlaceNameAndPlaceAddressAndCategoryLarge(place.getPlaceName(), place.getPlaceAddress(), place.getCategoryLarge()))
@@ -64,7 +64,7 @@ public class PlaceService {
         }
     }
 
-    private Place convertShoppingToEntity(DaejeonShoppingItemResponse dto) {
+    private Place convertShoppingToEntity(ShoppingItemResponse dto) {
         String[] GuDong = extractGuDong(dto.getShppgAddr());
 
         return Place.builder()
@@ -81,7 +81,7 @@ public class PlaceService {
                 .build();
     }
 
-    private Place convertTourspotToEntity(DaejeonTourspotItemResponse dto) {
+    private Place convertTourspotToEntity(TourspotItemResponse dto) {
         String[] GuDong = extractGuDong(dto.getTourspotAddr());
 
         return Place.builder()
@@ -98,7 +98,7 @@ public class PlaceService {
                 .build();
     }
 
-    private Place convertRestaurantToEntity(DaejeonRestaurantItemResponse dto) {
+    private Place convertRestaurantToEntity(RestaurantItemResponse dto) {
         String[] GuDong = extractGuDong(dto.getRoadAddress());
 
         return Place.builder()

@@ -7,10 +7,10 @@ import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonRestaurantApiResponse {
+public class RestaurantApiResponse {
 
     private Integer currentCount;
 
-    private List<DaejeonRestaurantItemResponse> data;
+    private List<RestaurantItemResponse> data;
 
 }

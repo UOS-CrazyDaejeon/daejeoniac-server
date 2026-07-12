@@ -1,7 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.client;
 
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonShoppingApiResponse;
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonShoppingItemResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.TourspotApiResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.TourspotItemResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -11,31 +11,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class DaejeonShoppingApiClient {
+public class TourspotApiClient {
 
     @Value("${daejeon.api.service-key}")
     private String serviceKey;
-    private final String shoppingApiUrl = "https://apis.data.go.kr/6300000/openapi2022/shppg/getshppg";
+    private final String tourspotApiUrl = "https://apis.data.go.kr/6300000/openapi2022/tourspot/gettourspot";
 
-    public List<DaejeonShoppingItemResponse> fetchShopping() {
+    public List<TourspotItemResponse> fetchTourspot() {
         RestTemplate restTemplate = new RestTemplate();
-        List<DaejeonShoppingItemResponse> allShoppingCenters = new ArrayList<>();
+        List<TourspotItemResponse> allTourspots = new ArrayList<>();
 
-        String url = UriComponentsBuilder.fromUriString(shoppingApiUrl)
+        String url = UriComponentsBuilder.fromUriString(tourspotApiUrl)
                 .queryParam("serviceKey", serviceKey)
                 .queryParam("pageNo", "1")
-                .queryParam("numOfRows", "100")
+                .queryParam("numOfRows", "150")
                 .toUriString();
 
-        DaejeonShoppingApiResponse response = restTemplate.getForObject(url, DaejeonShoppingApiResponse.class);
+        TourspotApiResponse response = restTemplate.getForObject(url, TourspotApiResponse.class);
 
         if (response != null
                 && response.getResponse() != null
                 && response.getResponse().getBody() != null
                 && response.getResponse().getBody().getItems() != null) {
-            allShoppingCenters.addAll(response.getResponse().getBody().getItems());
+            allTourspots.addAll(response.getResponse().getBody().getItems());
         }
 
-        return allShoppingCenters;
+        return allTourspots;
     }
 }

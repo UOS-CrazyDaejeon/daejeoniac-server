@@ -15,7 +15,7 @@ public class DaejeonShoppingApiClient {
 
     @Value("${daejeon.api.service-key}")
     private String serviceKey;
-    private final String shoppingApiUrl = "https://www.data.go.kr/data/15000867/openapi.do#/API%20%EB%AA%A9%EB%A1%9D/getshppg";
+    private final String shoppingApiUrl = "https://apis.data.go.kr/6300000/openapi2022/shppg/getshppg";
 
     public List<DaejeonShoppingItemResponse> fetchShopping() {
         RestTemplate restTemplate = new RestTemplate();
@@ -29,8 +29,12 @@ public class DaejeonShoppingApiClient {
 
         DaejeonShoppingApiResponse response = restTemplate.getForObject(url, DaejeonShoppingApiResponse.class);
 
-        if(response != null && response.getBody() != null && response.getBody().getItems() != null)
-            allShoppingCenters.addAll(response.getBody().getItems().getItem());
+        if (response != null
+                && response.getResponse() != null
+                && response.getResponse().getBody() != null
+                && response.getResponse().getBody().getItems() != null) {
+            allShoppingCenters.addAll(response.getResponse().getBody().getItems());
+        }
 
         return allShoppingCenters;
     }

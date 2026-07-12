@@ -19,6 +19,7 @@ public class Place {
 
     private String placeName;
 
+    @Column(name = "place_description", columnDefinition = "TEXT")
     private String placeDescription;
 
     private String placeAddress;

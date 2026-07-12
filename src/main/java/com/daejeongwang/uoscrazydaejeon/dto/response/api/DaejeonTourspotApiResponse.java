@@ -9,18 +9,18 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DaejeonTourspotApiResponse {
 
-    private Body body;
+    private Response response;
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Body {
-        private Items items;
-        private String totalCount;
+    public static class Response {
+        private Body body;
     }
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Items {
-        private List<DaejeonTourspotItemResponse> item;
+    public static class Body {
+        private List<DaejeonTourspotItemResponse> items;
+        private Integer totalCount;
     }
 }

@@ -15,7 +15,7 @@ public class DaejeonTourspotApiClient {
 
     @Value("${daejeon.api.service-key}")
     private String serviceKey;
-    private final String tourspotApiUrl = "https://www.data.go.kr/data/15000881/openapi.do#/API%20%EB%AA%A9%EB%A1%9D/gettourspot";
+    private final String tourspotApiUrl = "https://apis.data.go.kr/6300000/openapi2022/tourspot/gettourspot";
 
     public List<DaejeonTourspotItemResponse> fetchTourspot() {
         RestTemplate restTemplate = new RestTemplate();
@@ -29,8 +29,12 @@ public class DaejeonTourspotApiClient {
 
         DaejeonTourspotApiResponse response = restTemplate.getForObject(url, DaejeonTourspotApiResponse.class);
 
-        if(response != null && response.getBody() != null && response.getBody().getItems() != null)
-            allTourspots.addAll(response.getBody().getItems().getItem());
+        if (response != null
+                && response.getResponse() != null
+                && response.getResponse().getBody() != null
+                && response.getResponse().getBody().getItems() != null) {
+            allTourspots.addAll(response.getResponse().getBody().getItems());
+        }
 
         return allTourspots;
     }

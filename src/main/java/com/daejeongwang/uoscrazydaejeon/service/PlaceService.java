@@ -46,7 +46,7 @@ public class PlaceService {
     }
 
     private Place convertShoppingToEntity(DaejeonShoppingItemResponse dto) {
-        String[] GuDong = extractGuDong(dto.getShppgDtlAddr());
+        String[] GuDong = extractGuDong(dto.getShppgAddr());
 
         return Place.builder()
                 .placeName(dto.getShppgNm())
@@ -54,8 +54,8 @@ public class PlaceService {
                 .placeAddress(dto.getShppgAddr())
                 .latitude(parseCoordinate(dto.getMapLat()))
                 .longitude(parseCoordinate(dto.getMapLot()))
-                .gu(GuDong[1])
-                .dong(GuDong[2])
+                .gu(GuDong != null && GuDong.length > 1 ? GuDong[1] : null)
+                .dong(GuDong != null && GuDong.length > 2 ? GuDong[2] : null)
                 .categoryLarge("쇼핑")
                 .categoryMedium(null)
                 .categorySmall(null)
@@ -63,7 +63,7 @@ public class PlaceService {
     }
 
     private Place convertTourspotToEntity(DaejeonTourspotItemResponse dto) {
-        String[] GuDong = extractGuDong(dto.getTourspotDtlAddr());
+        String[] GuDong = extractGuDong(dto.getTourspotAddr());
 
         return Place.builder()
                 .placeName(dto.getTourspotNm())
@@ -71,8 +71,8 @@ public class PlaceService {
                 .placeAddress(dto.getTourspotAddr())
                 .latitude(parseCoordinate(dto.getMapLat()))
                 .longitude(parseCoordinate(dto.getMapLot()))
-                .gu(GuDong[1])
-                .dong(GuDong[2])
+                .gu(GuDong != null && GuDong.length > 1 ? GuDong[1] : null)
+                .dong(GuDong != null && GuDong.length > 2 ? GuDong[2] : null)
                 .categoryLarge("관광지")
                 .categoryMedium(null)
                 .categorySmall(null)

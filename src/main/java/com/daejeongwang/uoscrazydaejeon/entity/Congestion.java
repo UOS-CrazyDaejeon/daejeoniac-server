@@ -19,9 +19,13 @@ public class Congestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id", nullable = false)
-    private Place placeId;
+    private Place place;
 
     private String date;
+
+    private String gu;
+
+    private String placeName;
 
     private Double congestionRate;
 

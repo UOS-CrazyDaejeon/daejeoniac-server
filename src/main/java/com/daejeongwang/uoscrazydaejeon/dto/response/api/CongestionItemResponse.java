@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TrendItemResponse {
+public class CongestionItemResponse {
 
     private String cnctrRate; // 혼잡도 비율
 

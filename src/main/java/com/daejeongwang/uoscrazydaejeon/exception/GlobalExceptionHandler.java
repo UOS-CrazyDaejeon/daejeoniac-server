@@ -24,7 +24,9 @@ public class GlobalExceptionHandler {
                 .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .build();
 
-        return new ResponseEntity<>(resultDto, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(resultDto);
     }
 
     // NotFound 예외
@@ -38,7 +40,9 @@ public class GlobalExceptionHandler {
                 .code(HttpStatus.NOT_FOUND.value())
                 .build();
 
-        return new ResponseEntity<>(resultDto, HttpStatus.NOT_FOUND);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(resultDto);
     }
 
     // 유효하지 않은 토큰 예외
@@ -52,7 +56,9 @@ public class GlobalExceptionHandler {
                 .code(HttpStatus.UNAUTHORIZED.value())
                 .build();
 
-        return new ResponseEntity<>(resultDto, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(resultDto);
     }
 
     // AuthenticationFailed
@@ -66,7 +72,9 @@ public class GlobalExceptionHandler {
                 .code(HttpStatus.UNAUTHORIZED.value())
                 .build();
 
-        return new ResponseEntity<>(resultDto, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(resultDto);
     }
 
     // IllegalArgumentException
@@ -80,7 +88,9 @@ public class GlobalExceptionHandler {
                 .code(HttpStatus.BAD_REQUEST.value())
                 .build();
 
-        return new ResponseEntity<>(resultDto, HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(resultDto);
     }
 
 }

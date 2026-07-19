@@ -3,12 +3,16 @@ package com.daejeongwang.uoscrazydaejeon.service;
 import com.daejeongwang.uoscrazydaejeon.client.DaejeonRestaurantApiClient;
 import com.daejeongwang.uoscrazydaejeon.client.DaejeonShoppingApiClient;
 import com.daejeongwang.uoscrazydaejeon.client.DaejeonTourspotApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.response.PlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonRestaurantItemResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonShoppingItemResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.DaejeonTourspotItemResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,7 @@ public class PlaceService {
 
     private final PlaceRepository placeRepository;
 
+    // Admin Place API Service
     @Transactional
     public void syncAllPlaces() {
         syncTourspotPlaces();
@@ -132,5 +137,45 @@ public class PlaceService {
         return parts;
     }
 
+    // Place 조회 API Service
+    public List<PlaceResponse> findAllPlaces(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return placeRepository.findAll(pageable)
+                .stream()
+                .map(PlaceResponse::from)
+                .toList();
+    }
+
+    public PlaceResponse getPlaceById(Long placeId) {
+        Place place = placeRepository.findByPlaceId(placeId)
+                .orElseThrow(() -> new RuntimeException("장소를 찾을 수 없습니다."));
+
+        return PlaceResponse.from(place);
+    }
+
+    public Page<PlaceResponse> getNearbyPlacesByPlaceId(
+            Long placeId,
+            Double radius,
+            int page, int size
+    ) {
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new RuntimeException("장소를 찾을 수 없습니다."));
+
+        if(place.getLatitude() == null || place.getLongitude() == null) {
+            throw new RuntimeException("해당 장소의 좌표 정보가 없습니다.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return placeRepository.findNearbyPlaces(
+                        placeId,
+                        place.getLatitude(),
+                        place.getLongitude(),
+                        radius,
+                        pageable
+                )
+                .map(PlaceResponse::from);
+    }
 
 }

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonTourspotItemResponse {
+public class TourspotItemResponse {
 
     private String tourspotNm; // 관광지명
 

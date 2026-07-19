@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonShoppingItemResponse {
+public class ShoppingItemResponse {
 
     private String shppgNm; // 쇼핑 장소명
 

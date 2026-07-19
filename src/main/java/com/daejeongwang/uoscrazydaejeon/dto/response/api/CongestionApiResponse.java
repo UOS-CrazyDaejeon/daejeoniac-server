@@ -7,20 +7,36 @@ import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DaejeonTourspotApiResponse {
+public class CongestionApiResponse {
 
     private Response response;
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Response {
+        private Header header;
         private Body body;
     }
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Header {
+        private String resultMsg;
+        private String resultCode;
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Body {
-        private List<DaejeonTourspotItemResponse> items;
         private Integer totalCount;
+        private Items items;
+        private Integer numOfRows;
+        private Integer pageNo;
+    }
+
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Items {
+        private List<CongestionItemResponse> item;
     }
 }

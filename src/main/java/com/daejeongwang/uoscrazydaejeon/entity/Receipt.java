@@ -3,20 +3,14 @@ package com.daejeongwang.uoscrazydaejeon.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(
-        uniqueConstraints = @UniqueConstraint(
-            name = "uk_receipt_member_place_receiptDate",
-            columnNames = {"member_id", "place_id", "receipt_date"}
-        )
-)
 public class Receipt {
 
     public enum ReceiptStatus {
@@ -43,8 +37,13 @@ public class Receipt {
     @JoinColumn(name = "place_id", nullable = false)
     private Place place;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID receiptUuid;
+
     @Column(nullable = false)
-    private String receiptImageKey;
+    private String objectKey;
+
+    private LocalDateTime createdAt;
 
     private LocalDateTime verifiedAt;
 
@@ -61,6 +60,12 @@ public class Receipt {
     private String ocrPlaceName;
 
     private LocalDateTime ocrPaidAt;
+
+
+    @PrePersist
+    private void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public void completeOcr(
             String ocrPlaceName,

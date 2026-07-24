@@ -18,6 +18,7 @@ public class PlaceClickLogController {
 
     private final PlaceClickLogService placeClickLogService;
 
+    // TODO : 현재 로그인 사용자의 ID를 파라미터로 넘겨주기
     @PostMapping("/{placeId}/clicks")
     @Operation(summary = "장소 별 클릭 로그 API", description = "장소가 클릭된 횟수를 증가시킵니다.")
     public ResponseEntity<Void> saveClickLog(

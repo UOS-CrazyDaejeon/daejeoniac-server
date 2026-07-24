@@ -15,6 +15,7 @@ public class PlaceClickLogService {
     private final PlaceRepository placeRepository;
     private final PlaceClickLogRepository placeClickLogRepository;
 
+    // TODO : 현재 로그인 사용자의 ID를 파라미터로 받기
     @Transactional
     public void saveClickLog(Long placeId) {
         Place place = placeRepository.findByPlaceId(placeId)

@@ -5,10 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/places")
@@ -26,5 +23,13 @@ public class PlaceClickLogController {
     ) {
         placeClickLogService.saveClickLog(placeId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{placeId}/click-count")
+    @Operation(summary = "장소 별 클릭 로그 조회 API", description = "특정 장소가 클릭된 횟수를 조회합니다.")
+    public ResponseEntity<Long> getClickCount(@PathVariable Long placeId) {
+        long count = placeClickLogService.getClickCountByPlaceId(placeId);
+
+        return ResponseEntity.ok(count);
     }
 }

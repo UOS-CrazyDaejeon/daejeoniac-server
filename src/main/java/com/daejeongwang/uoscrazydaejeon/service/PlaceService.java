@@ -36,6 +36,7 @@ public class PlaceService {
         syncRestaurantPlaces();
     }
 
+    // 쇼핑 센터 sync
     public void syncShoppingPlaces() {
         List<ShoppingItemResponse> response = shoppingApiClient.fetchShopping();
 
@@ -47,6 +48,7 @@ public class PlaceService {
         }
     }
 
+    // 관광지 sync
     public void syncTourspotPlaces() {
         List<TourspotItemResponse> response = tourspotApiClient.fetchTourspot();
 
@@ -58,6 +60,7 @@ public class PlaceService {
         }
     }
 
+    // 음식점 sync
     public void syncRestaurantPlaces() {
         List<RestaurantItemResponse> response = restaurantApiClient.fetchRestaurants();
 
@@ -75,6 +78,7 @@ public class PlaceService {
         return Place.builder()
                 .placeName(dto.getShppgNm())
                 .placeDescription(dto.getShppgIntrd())
+                .tag(null)
                 .placeAddress(dto.getShppgAddr())
                 .latitude(parseCoordinate(dto.getMapLat()))
                 .longitude(parseCoordinate(dto.getMapLot()))
@@ -92,6 +96,7 @@ public class PlaceService {
         return Place.builder()
                 .placeName(dto.getTourspotNm())
                 .placeDescription(dto.getTourspotSumm())
+                .tag(null)
                 .placeAddress(dto.getTourspotAddr())
                 .latitude(parseCoordinate(dto.getMapLat()))
                 .longitude(parseCoordinate(dto.getMapLot()))
@@ -109,6 +114,7 @@ public class PlaceService {
         return Place.builder()
                 .placeName(dto.getRestaurantName())
                 .placeDescription(null)
+                .tag(null)
                 .placeAddress(dto.getRoadAddress())
                 .latitude(null)
                 .longitude(null)
@@ -138,6 +144,8 @@ public class PlaceService {
     }
 
     // Place 조회 API Service
+
+    // 전체 장소 조회
     public List<PlaceResponse> findAllPlaces(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -147,6 +155,8 @@ public class PlaceService {
                 .toList();
     }
 
+
+    // 특정 장소 조회
     public PlaceResponse getPlaceById(Long placeId) {
         Place place = placeRepository.findByPlaceId(placeId)
                 .orElseThrow(() -> new RuntimeException("장소를 찾을 수 없습니다."));
@@ -154,6 +164,7 @@ public class PlaceService {
         return PlaceResponse.from(place);
     }
 
+    // 특정 장소 근처의 장소 조회
     public Page<PlaceResponse> getNearbyPlacesByPlaceId(
             Long placeId,
             Double radius,

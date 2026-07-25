@@ -19,6 +19,8 @@ public class Place {
 
     private String placeName;
 
+    private String tag;
+
     @Column(name = "place_description", columnDefinition = "TEXT")
     private String placeDescription;
 

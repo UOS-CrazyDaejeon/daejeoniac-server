@@ -1,5 +1,6 @@
 package com.daejeongwang.uoscrazydaejeon.controller;
 
+import com.daejeongwang.uoscrazydaejeon.service.PlaceSearchService;
 import com.daejeongwang.uoscrazydaejeon.service.PlaceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlaceSyncController {
 
     private final PlaceService placeService;
+    private final PlaceSearchService placeSearchService;
+
+    @PostMapping("/searched-places")
+    @Operation(summary = "전체 장소 동기화", description = "대전의 모든 장소를 DB에 저장합니다.")
+    public ResponseEntity<String> syncAllSearchedPlaces() {
+        placeSearchService.syncPlaces();
+
+        return ResponseEntity.ok("전체 장소 데이터 동기화 완료");
+    }
 
     @PostMapping("/places")
     @Operation(summary = "전체 장소 동기화", description = "대전의 모든 장소를 DB에 저장합니다.")

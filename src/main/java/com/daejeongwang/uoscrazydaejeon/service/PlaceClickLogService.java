@@ -29,4 +29,8 @@ public class PlaceClickLogService {
         placeClickLogRepository.save(clickLog);
     }
 
+    public long getClickCountByPlaceId(Long placeId) {
+        return placeClickLogRepository.countByPlace_PlaceId(placeId);
+    }
+
 }

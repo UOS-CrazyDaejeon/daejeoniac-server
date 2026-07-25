@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ExternalPlaceSearchResponse {
+public class PlaceSearchResponse {
 
     private String name;
 
@@ -21,5 +21,5 @@ public class ExternalPlaceSearchResponse {
 
     private String category;
 
-    private String externalUrl;
+    private String url;
 }

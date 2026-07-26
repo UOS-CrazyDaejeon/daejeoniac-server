@@ -34,8 +34,10 @@ public class ReceiptService {
 
         recommendationSessionService.validateRecommendedPlace(member.getId(), placeId);
 
-        if (latitude == null || longitude == null) {
-            throw new IllegalArgumentException("위치 정보가 필요합니다.");
+        validateCoordinates(latitude, longitude);
+
+        if (place.getLatitude() == null || place.getLongitude() == null) {
+            throw new IllegalArgumentException("위치 정보가 없는 장소입니다.");
         }
 
         double distance = calculateDistance(latitude, longitude, place.getLatitude(), place.getLongitude());
@@ -99,7 +101,7 @@ public class ReceiptService {
         );
         boolean placeMatched = receipt.getPlace().getPlaceName().equalsIgnoreCase(ocrPlaceName.trim());
         boolean paidToday = ocrPaidAt.toLocalDate().equals(LocalDate.now());
-        boolean valid = duplicate && placeMatched && paidToday;
+        boolean valid = !duplicate && placeMatched && paidToday;
 
         receipt.ocrSuccess(ocrPlaceName, ocrPaidAt, valid);
     }
@@ -143,7 +145,23 @@ public class ReceiptService {
         return earthRadius * c;
     }
 
+    private void validateCoordinates(Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("위치정보가 필요합니다.");
+        }
 
+        if (!Double.isFinite(latitude) || !Double.isFinite(longitude)) {
+            throw new IllegalArgumentException("올바르지 않은 좌표입니다.");
+        }
+
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException("위도는 -90 이상 90 이하여야 합니다.");
+        }
+
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("경도는 -180 이상 180 이하여야 합니다.");
+        }
+    }
 
 
 }

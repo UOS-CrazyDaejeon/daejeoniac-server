@@ -50,7 +50,7 @@ public class Receipt {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false)
-    private ReceiptStatus status = ReceiptStatus.PENDING;
+    private ReceiptStatus verifyStatus = ReceiptStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -67,26 +67,22 @@ public class Receipt {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void completeOcr(
+    public void ocrSuccess(
             String ocrPlaceName,
-            LocalDateTime ocrPaidAt
+            LocalDateTime ocrPaidAt,
+            boolean approved
     ) {
         this.ocrStatus = OcrStatus.SUCCESS;
         this.ocrPlaceName = ocrPlaceName;
         this.ocrPaidAt = ocrPaidAt;
+        this.verifyStatus = approved ? ReceiptStatus.APPROVED : ReceiptStatus.REJECTED;
+        this.verifiedAt = LocalDateTime.now();
     }
 
-    public void failOcr() {
+    public void ocrFailure() {
         this.ocrStatus = OcrStatus.FAILED;
-    }
-
-    public void approve() {
-        this.status = ReceiptStatus.APPROVED;
+        this.verifyStatus = ReceiptStatus.REJECTED;
         this.verifiedAt = LocalDateTime.now();
     }
 
-    public void reject() {
-        this.status = ReceiptStatus.REJECTED;
-        this.verifiedAt = LocalDateTime.now();
-    }
 }

@@ -90,9 +90,16 @@ public class ReceiptService {
             );
         }
 
+        boolean duplicate = receiptRepository.existsByMember_IdAndPlace_PlaceIdAndOcrPaidAtGreaterThanEqualAndOcrPaidAtLessThanAndVerifyStatus(
+                receipt.getMember().getId(),
+                receipt.getPlace().getPlaceId(),
+                ocrPaidAt.toLocalDate().atStartOfDay(),
+                ocrPaidAt.toLocalDate().plusDays(1).atStartOfDay(),
+                Receipt.ReceiptStatus.APPROVED
+        );
         boolean placeMatched = receipt.getPlace().getPlaceName().equalsIgnoreCase(ocrPlaceName.trim());
         boolean paidToday = ocrPaidAt.toLocalDate().equals(LocalDate.now());
-        boolean valid = placeMatched && paidToday;
+        boolean valid = duplicate && placeMatched && paidToday;
 
         receipt.ocrSuccess(ocrPlaceName, ocrPaidAt, valid);
     }
@@ -101,7 +108,7 @@ public class ReceiptService {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        Receipt receipt = receiptRepository.findByReceiptIdAndMemberId(receiptId, member.getId())
+        Receipt receipt = receiptRepository.findByReceiptIdAndMember_Id(receiptId, member.getId())
                 .orElseThrow(() ->  new IllegalArgumentException("영수증을 찾을 수 없습니다."));
 
         boolean gachaAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;
@@ -135,7 +142,6 @@ public class ReceiptService {
 
         return earthRadius * c;
     }
-
 
 
 

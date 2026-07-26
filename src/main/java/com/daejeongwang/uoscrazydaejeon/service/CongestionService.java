@@ -59,4 +59,8 @@ public class CongestionService {
         return Double.valueOf(value);
     }
 
+    // 특정 장소에 대한 congestion 전체 조회
+
+
+
 }

@@ -8,6 +8,7 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.api.RestaurantItemResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.ShoppingItemResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.TourspotItemResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
+import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -158,8 +159,8 @@ public class PlaceService {
 
     // 특정 장소 조회
     public PlaceResponse getPlaceById(Long placeId) {
-        Place place = placeRepository.findByPlaceId(placeId)
-                .orElseThrow(() -> new RuntimeException("장소를 찾을 수 없습니다."));
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new ResourceNotFoundException("장소를 찾을 수 없습니다."));
 
         return PlaceResponse.from(place);
     }
@@ -171,7 +172,7 @@ public class PlaceService {
             int page, int size
     ) {
         Place place = placeRepository.findById(placeId)
-                .orElseThrow(() -> new RuntimeException("장소를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("장소를 찾을 수 없습니다."));
 
         if(place.getLatitude() == null || place.getLongitude() == null) {
             throw new RuntimeException("해당 장소의 좌표 정보가 없습니다.");

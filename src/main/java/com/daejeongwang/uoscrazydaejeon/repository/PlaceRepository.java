@@ -14,8 +14,6 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
 
     Page<Place> findAll(Pageable pageable);
 
-    Optional<Place> findByPlaceId(Long placeId);
-
     Optional<Place> findByPlaceName(String placeName);
 
     @Query(value = """

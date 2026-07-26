@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PlaceClickLogRepository extends JpaRepository<PlaceClickLog, Long> {
-    long countByPlace_PlaceId(Long placeId);
+    long countByPlace_Id(Long placeId);
 }

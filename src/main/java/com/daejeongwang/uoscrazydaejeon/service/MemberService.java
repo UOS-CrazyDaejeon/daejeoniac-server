@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.dto.response.MemberResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.PointResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
@@ -20,9 +21,21 @@ public class MemberService {
         return MemberResponse.builder()
                 .memberId(member.getId())
                 .memberName(member.getMemberName())
+                .nickname(member.getNickname())
                 .phone(member.getPhone())
                 .point(member.getPoint())
                 .coupon(member.getCoupon())
+                .build();
+    }
+
+    public PointResponse getMemberPoint(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
+
+        return PointResponse.builder()
+                .memberName(member.getMemberName())
+                .nickname(member.getNickname())
+                .point(member.getPoint())
                 .build();
     }
 }

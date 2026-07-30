@@ -21,7 +21,7 @@ public class VisitedPlaceService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final ReceiptRepository receiptRepository;
 
-    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(10);
+    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
     public List<VisitedPlaceListResponse> getMyVisitedPlaces() {
         Long memberId = 1L;

@@ -25,14 +25,14 @@ public class ReceiptService {
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
 
-    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(10);
+    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMember_Id(visitedPlaceId, member.getId())
+        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
                 .orElseThrow(() -> new IllegalArgumentException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
         boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());

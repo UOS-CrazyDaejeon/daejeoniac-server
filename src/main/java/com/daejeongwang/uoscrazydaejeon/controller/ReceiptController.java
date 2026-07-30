@@ -23,10 +23,10 @@ public class ReceiptController {
 
     @PostMapping("/upload-url")
     public ResponseEntity<ReceiptUploadUrlResponse> createUploadUrl(
-            @RequestParam Long placeId,
+            @RequestParam Long visitedPlaceId,
             @RequestParam String contentType
     ) {
-        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(placeId, contentType);
+        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(visitedPlaceId, contentType);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

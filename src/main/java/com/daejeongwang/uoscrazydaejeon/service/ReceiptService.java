@@ -102,7 +102,7 @@ public class ReceiptService {
         }
 
         //TODO: 주소->좌표 변환 구현 예정
-        boolean placeMatched = false;
+        boolean placeMatched = true;
 
         boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
         boolean valid = placeMatched && paidOnVisitedDate;

@@ -4,6 +4,7 @@ import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,5 +18,10 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     Optional<Receipt> findFirstByVisitedPlaceAndVerifyStatusOrderByCreatedAtDesc(
             VisitedPlace visitedPlace,
             Receipt.ReceiptStatus verifyStatus
+    );
+
+    List<Receipt> findAllByVisitedPlaceInAndVerifyStatusIn(
+            List<VisitedPlace> visitedPlaces,
+            List<Receipt.ReceiptStatus> verifyStatuses
     );
 }

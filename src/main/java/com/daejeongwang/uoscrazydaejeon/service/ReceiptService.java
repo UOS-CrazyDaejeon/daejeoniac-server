@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,6 +24,8 @@ public class ReceiptService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
+
+    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(10);
 
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
@@ -134,7 +137,7 @@ public class ReceiptService {
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
                 && receipt.getOcrStatus() == Receipt.OcrStatus.PENDING
-                && !receipt.getCreatedAt().plusMinutes(10).isAfter(LocalDateTime.now());
+                && !receipt.getCreatedAt().plus(PENDING_VALID_DURATION).isAfter(LocalDateTime.now());
     }
 
     private void expirePendingReceipt(VisitedPlace visitedPlace) {

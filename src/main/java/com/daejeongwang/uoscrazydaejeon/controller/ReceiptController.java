@@ -24,11 +24,9 @@ public class ReceiptController {
     @PostMapping("/upload-url")
     public ResponseEntity<ReceiptUploadUrlResponse> createUploadUrl(
             @RequestParam Long placeId,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
             @RequestParam String contentType
     ) {
-        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(placeId, latitude, longitude, contentType);
+        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(placeId, contentType);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -38,9 +36,10 @@ public class ReceiptController {
             @RequestParam UUID receiptUuid,
             @RequestParam Receipt.OcrStatus ocrStatus,
             @RequestParam(required = false) String ocrPlaceName,
+            @RequestParam(required = false) String ocrPlaceAddress,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime ocrPaidAt
     ) {
-        receiptService.saveOcrResult(receiptUuid, ocrStatus, ocrPlaceName, ocrPaidAt);
+        receiptService.saveOcrResult(receiptUuid, ocrStatus, ocrPlaceName, ocrPlaceAddress, ocrPaidAt);
 
         return ResponseEntity.noContent().build();
     }

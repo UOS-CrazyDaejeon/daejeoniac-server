@@ -3,11 +3,11 @@ package com.daejeongwang.uoscrazydaejeon.service;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
-import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
+import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
-import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
+import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,30 +20,29 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ReceiptService {
     private final ReceiptRepository receiptRepository;
-    private final PlaceRepository placeRepository;
+    private final VisitedPlaceRepository visitedPlaceRepository;
     private final MemberRepository memberRepository;
-    private final RecommendationSessionService recommendationSessionService;
     private final S3Service s3Service;
 
-    public ReceiptUploadUrlResponse issueUploadUrl(Long placeId, Double latitude, Double longitude, String contentType) {
+    @Transactional
+    public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        Place place = placeRepository.findById(placeId)
-                .orElseThrow(() -> new IllegalArgumentException("장소가 없습니다."));
+        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMember_Id(visitedPlaceId, member.getId())
+                .orElseThrow(() -> new IllegalArgumentException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
-        recommendationSessionService.validateRecommendedPlace(member.getId(), placeId);
+        boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());
 
-        validateCoordinates(latitude, longitude);
-
-        if (place.getLatitude() == null || place.getLongitude() == null) {
-            throw new IllegalArgumentException("위치 정보가 없는 장소입니다.");
+        if (!visitIsToday) {
+            throw new IllegalArgumentException("방문 인증 당일에만 영수증을 등록할 수 있습니다.");
         }
 
-        double distance = calculateDistance(latitude, longitude, place.getLatitude(), place.getLongitude());
-        if(distance > 250) {
-            throw new IllegalArgumentException("인증 범위를 벗어났습니다.");
+        boolean approvedExists = receiptRepository.existsByVisitedPlaceAndVerifyStatus(visitedPlace, Receipt.ReceiptStatus.APPROVED);
+        if(approvedExists){
+            throw new IllegalArgumentException("이미 승인된 영수증이 있습니다.");
         }
+        expirePendingReceipt(visitedPlace);
 
         UUID receiptUuid = UUID.randomUUID();
         String extension = switch(contentType) {
@@ -57,7 +56,7 @@ public class ReceiptService {
 
         Receipt receipt = Receipt.builder()
                 .member(member)
-                .place(place)
+                .visitedPlace(visitedPlace)
                 .receiptUuid(receiptUuid)
                 .objectKey(objectKey)
                 .build();
@@ -67,15 +66,23 @@ public class ReceiptService {
         return ReceiptUploadUrlResponse.builder()
                 .receiptId(savedReceipt.getReceiptId())
                 .uploadUrl(uploadUrl)
-                .expiresIn(600)
+                .expiresIn(300)
                 .build();
     }
 
     @Transactional
-    public void saveOcrResult(UUID receiptUuid, Receipt.OcrStatus ocrStatus, String ocrPlaceName, LocalDateTime ocrPaidAt) {
+    public void saveOcrResult(UUID receiptUuid, Receipt.OcrStatus ocrStatus, String ocrPlaceName, String ocrPlaceAddress, LocalDateTime ocrPaidAt) {
         Receipt receipt = receiptRepository.findByReceiptUuid(receiptUuid)
                 .orElseThrow(() -> new IllegalArgumentException("영수증 인증 요청이 없습니다."));
 
+        if (receipt.getVerifyStatus() != Receipt.ReceiptStatus.PENDING) {
+            return;
+        }
+
+        if (isExpired(receipt)) {
+            receipt.expire();
+            return;
+        }
         if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) { return; }
 
         if (ocrStatus == Receipt.OcrStatus.PENDING) {
@@ -86,24 +93,21 @@ public class ReceiptService {
             return;
         }
 
-        if (ocrPlaceName == null || ocrPaidAt == null) {
+        if (ocrPlaceName == null || ocrPlaceName.isBlank()
+                || ocrPlaceAddress == null || ocrPlaceAddress.isBlank()
+                || ocrPaidAt == null) {
             throw new IllegalArgumentException(
-                    "OCR 성공 결과에는 장소명과 결제 시간이 필요합니다."
+                    "OCR 성공 결과에는 장소명, 주소와 결제 시간이 필요합니다."
             );
         }
 
-        boolean duplicate = receiptRepository.existsByMember_IdAndPlace_PlaceIdAndOcrPaidAtGreaterThanEqualAndOcrPaidAtLessThanAndVerifyStatus(
-                receipt.getMember().getId(),
-                receipt.getPlace().getPlaceId(),
-                ocrPaidAt.toLocalDate().atStartOfDay(),
-                ocrPaidAt.toLocalDate().plusDays(1).atStartOfDay(),
-                Receipt.ReceiptStatus.APPROVED
-        );
-        boolean placeMatched = receipt.getPlace().getPlaceName().equalsIgnoreCase(ocrPlaceName.trim());
-        boolean paidToday = ocrPaidAt.toLocalDate().equals(LocalDate.now());
-        boolean valid = !duplicate && placeMatched && paidToday;
+        //TODO: 주소->좌표 변환 구현 예정
+        boolean placeMatched = false;
 
-        receipt.ocrSuccess(ocrPlaceName, ocrPaidAt, valid);
+        boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
+        boolean valid = placeMatched && paidOnVisitedDate;
+
+        receipt.ocrSuccess(ocrPlaceName, ocrPlaceAddress, ocrPaidAt, valid);
     }
 
     public ReceiptStatusResponse getReceiptStatus(Long receiptId) {
@@ -117,8 +121,8 @@ public class ReceiptService {
 
         return ReceiptStatusResponse.builder()
                 .receiptId(receipt.getReceiptId())
-                .placeId(receipt.getPlace().getPlaceId())
-                .placeName(receipt.getPlace().getPlaceName())
+                .placeId(receipt.getVisitedPlace().getPlace().getPlaceId())
+                .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
                 .ocrStatus(receipt.getOcrStatus())
                 .gachaAvailable(gachaAvailable)
@@ -127,41 +131,28 @@ public class ReceiptService {
     }
 
 
-    private double calculateDistance(Double userLat, Double userLon, Double placeLat, Double placeLon) {
-        double earthRadius = 6371000;
-
-        double latDistance = Math.toRadians(placeLat - userLat);
-        double lonDistance = Math.toRadians(placeLon - userLon);
-
-        double a =
-                Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(userLat))
-                * Math.cos(Math.toRadians(placeLat))
-                * Math.sin(lonDistance / 2)
-                * Math.sin(lonDistance / 2);
-
-        double c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return earthRadius * c;
+    private boolean isExpired(Receipt receipt) {
+        return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
+                && receipt.getOcrStatus() == Receipt.OcrStatus.PENDING
+                && !receipt.getCreatedAt().plusMinutes(10).isAfter(LocalDateTime.now());
     }
 
-    private void validateCoordinates(Double latitude, Double longitude) {
-        if (latitude == null || longitude == null) {
-            throw new IllegalArgumentException("위치정보가 필요합니다.");
+    private void expirePendingReceipt(VisitedPlace visitedPlace) {
+        Receipt pendingReceipt = receiptRepository
+                .findFirstByVisitedPlaceAndVerifyStatusOrderByCreatedAtDesc(
+                        visitedPlace,
+                        Receipt.ReceiptStatus.PENDING
+                )
+                .orElse(null);
+
+        if (pendingReceipt == null) {return;}
+
+        if (isExpired(pendingReceipt)) {
+            pendingReceipt.expire();
+            return;
         }
 
-        if (!Double.isFinite(latitude) || !Double.isFinite(longitude)) {
-            throw new IllegalArgumentException("올바르지 않은 좌표입니다.");
-        }
-
-        if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException("위도는 -90 이상 90 이하여야 합니다.");
-        }
-
-        if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException("경도는 -180 이상 180 이하여야 합니다.");
-        }
+        throw new IllegalArgumentException("처리 중인 영수증이 있습니다.");
     }
-
 
 }

@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -109,25 +108,24 @@ public class ReceiptService {
             );
         }
 
-        //TODO: 주소->좌표 변환 구현 예정
         AddressApiResponse response = addressApiClient.searchCoordinateByAddress(ocrPlaceAddress);
-        if(response == null || response.getDocuments() == null || response.getDocuments().isEmpty()){
-            return;
+
+        boolean placeMatched = false;
+        if(response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()){
+            AddressApiResponse.Document document = response.getDocuments().get(0);
+            double receiptLongitude = Double.parseDouble(document.getLongitude());
+            double receiptLatitude = Double.parseDouble(document.getLatitude());
+
+            Place place = receipt.getVisitedPlace().getPlace();
+            double distance = calculateDistance(
+                    place.getLatitude(),
+                    place.getLongitude(),
+                    receiptLatitude,
+                    receiptLongitude
+            );
+
+            placeMatched = distance <= 100.0;
         }
-
-        AddressApiResponse.Document document = response.getDocuments().get(0);
-        double receiptLongitude = Double.parseDouble(document.getLongitude());
-        double receiptLatitude = Double.parseDouble(document.getLatitude());
-
-        Place place = receipt.getVisitedPlace().getPlace();
-        double distance = calculateDistance(
-                place.getLatitude(),
-                place.getLongitude(),
-                receiptLatitude,
-                receiptLongitude
-        );
-
-        boolean placeMatched = distance <= 250.0;
 
         boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
         boolean valid = placeMatched && paidOnVisitedDate;

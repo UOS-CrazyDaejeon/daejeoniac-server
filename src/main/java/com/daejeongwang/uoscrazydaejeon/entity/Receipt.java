@@ -31,10 +31,6 @@ public class Receipt {
     private Long receiptId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visited_place_id", nullable = false)
     private VisitedPlace visitedPlace;
 

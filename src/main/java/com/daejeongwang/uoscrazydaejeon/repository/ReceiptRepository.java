@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     Optional<Receipt> findByReceiptUuid(UUID receiptUuid);
-    Optional<Receipt> findByReceiptIdAndMember_Id(Long receiptId, Long memberId);
+    Optional<Receipt> findByReceiptIdAndVisitedPlace_Member_Id(Long receiptId, Long memberId);
     boolean existsByVisitedPlaceAndVerifyStatus(
             VisitedPlace visitedPlace,
             Receipt.ReceiptStatus verifyStatus

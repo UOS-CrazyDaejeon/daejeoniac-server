@@ -62,7 +62,6 @@ public class ReceiptService {
         String uploadUrl = s3Service.createUploadUrl(objectKey, contentType);
 
         Receipt receipt = Receipt.builder()
-                .member(member)
                 .visitedPlace(visitedPlace)
                 .receiptUuid(receiptUuid)
                 .objectKey(objectKey)
@@ -137,7 +136,7 @@ public class ReceiptService {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        Receipt receipt = receiptRepository.findByReceiptIdAndMember_Id(receiptId, member.getId())
+        Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())
                 .orElseThrow(() ->  new IllegalArgumentException("영수증을 찾을 수 없습니다."));
 
         boolean gachaAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;

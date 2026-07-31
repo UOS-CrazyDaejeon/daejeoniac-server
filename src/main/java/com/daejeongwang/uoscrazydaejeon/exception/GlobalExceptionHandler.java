@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -77,6 +78,62 @@ public class GlobalExceptionHandler {
                 .body(resultDto);
     }
 
+    // Conflict
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ResultDto> handleConflict(ConflictException e) {
+        logger.error("ConflictException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("ConflictException : " + e.getMessage())
+                .code(HttpStatus.CONFLICT.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.CONFLICT);
+    }
+
+    // ExternalService
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ResultDto> handleExternalService(ExternalServiceException e) {
+        logger.error("ExternalServiceException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("ExternalServiceException : " + e.getMessage())
+                .code(HttpStatus.BAD_GATEWAY.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.BAD_GATEWAY);
+    }
+
+    // Forbidden
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ResultDto> handleForbidden(ForbiddenException e) {
+        logger.error("ForbiddenException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("ForbiddenException : " + e.getMessage())
+                .code(HttpStatus.FORBIDDEN.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.FORBIDDEN);
+    }
+
+    // UnsupportedMediaType
+    @ExceptionHandler(UnsupportedMediaTypeException.class)
+    public ResponseEntity<ResultDto> handleUnsupportedMediaType(UnsupportedMediaTypeException e) {
+        logger.error("UnsupportedMediaTypeException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("UnsupportedMediaTypeException : " + e.getMessage())
+                .code(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
     // IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ResultDto> handleIllegalArgument(IllegalArgumentException e) {
@@ -91,6 +148,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(resultDto);
+    }
+
+    // MethodArgumentNotValidException
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ResultDto> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        logger.error("MethodArgumentNotValidException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("MethodArgumentNotValidException : " + e.getMessage())
+                .code(HttpStatus.BAD_REQUEST.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.BAD_REQUEST);
     }
 
 }

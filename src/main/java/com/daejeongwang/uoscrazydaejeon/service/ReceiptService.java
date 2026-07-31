@@ -1,8 +1,11 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
+import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.AddressApiResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
+import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,6 +27,7 @@ public class ReceiptService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
+    private final AddressApiClient addressApiClient;
 
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
@@ -102,7 +107,24 @@ public class ReceiptService {
         }
 
         //TODO: 주소->좌표 변환 구현 예정
-        boolean placeMatched = true;
+        AddressApiResponse response = addressApiClient.searchCoordinateByAddress(ocrPlaceAddress);
+        if(response == null || response.getDocuments() == null || response.getDocuments().isEmpty()){
+            return;
+        }
+
+        AddressApiResponse.Document document = response.getDocuments().get(0);
+        double receiptLongitude = Double.parseDouble(document.getLongitude());
+        double receiptLatitude = Double.parseDouble(document.getLatitude());
+
+        Place place = receipt.getVisitedPlace().getPlace();
+        double distance = calculateDistance(
+                place.getLatitude(),
+                place.getLongitude(),
+                receiptLatitude,
+                receiptLongitude
+        );
+
+        boolean placeMatched = distance <= 250.0;
 
         boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
         boolean valid = placeMatched && paidOnVisitedDate;
@@ -153,6 +175,26 @@ public class ReceiptService {
         }
 
         throw new IllegalArgumentException("처리 중인 영수증이 있습니다.");
+    }
+
+
+    private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
+        double earthRadius = 6371000;
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+
+        double a =
+                Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                        + Math.cos(Math.toRadians(lat1))
+                        * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(lonDistance / 2)
+                        * Math.sin(lonDistance / 2);
+        a = Math.max(0.0, Math.min(1.0, a));
+
+        double c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return earthRadius * c;
     }
 
 }

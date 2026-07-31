@@ -5,6 +5,8 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.VisitVerificationResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
+import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
+import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
@@ -30,10 +32,10 @@ public class VisitVerificationService {
     @Transactional
     public VisitVerificationResponse verifyVisit(Long placeId, VisitVerificationRequest request) {
         Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         Place place = placeRepository.findById(placeId)
-                .orElseThrow(() -> new IllegalArgumentException("장소가 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("장소가 없습니다."));
 
         validateMeasurement(request.getMeasuredAt(), request.getAccuracy());
         validateVisitLocation(request.getLatitude(), request.getLongitude(), place);
@@ -45,7 +47,7 @@ public class VisitVerificationService {
         boolean alreadyVisited = visitedPlaceRepository
                 .existsByMemberAndPlaceAndVisitedAtGreaterThanEqualAndVisitedAtLessThan(member, place, startOfDay, endOfDay);
         if(alreadyVisited){
-            throw new IllegalArgumentException("이미 방문한 장소입니다.");
+            throw new ConflictException("이미 방문한 장소입니다.");
         }
 
         VisitedPlace visitedPlace = VisitedPlace.builder()
@@ -57,7 +59,7 @@ public class VisitVerificationService {
         try {
             savedVisitedPlace = visitedPlaceRepository.saveAndFlush(visitedPlace);
         } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("이미 방문한 장소입니다.", e);
+            throw new ConflictException("이미 방문한 장소입니다.", e);
         }
 
         return VisitVerificationResponse.builder()
@@ -89,10 +91,6 @@ public class VisitVerificationService {
 
     private void validateVisitLocation(Double latitude, Double longitude, Place place) {
         validateCoordinates(latitude, longitude);
-
-        if (place.getLatitude() == null || place.getLongitude() == null) {
-            throw new IllegalArgumentException("위치 정보가 없는 장소입니다.");
-        }
 
         double distance = calculateDistance(
                 latitude,

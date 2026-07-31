@@ -8,6 +8,9 @@ import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
+import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
+import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
+import com.daejeongwang.uoscrazydaejeon.exception.UnsupportedMediaTypeException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
@@ -34,20 +37,20 @@ public class ReceiptService {
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
         Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
-                .orElseThrow(() -> new IllegalArgumentException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
         boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());
 
         if (!visitIsToday) {
-            throw new IllegalArgumentException("방문 인증 당일에만 영수증을 등록할 수 있습니다.");
+            throw new ConflictException("방문 인증 당일에만 영수증을 등록할 수 있습니다.");
         }
 
         boolean approvedExists = receiptRepository.existsByVisitedPlaceAndVerifyStatus(visitedPlace, Receipt.ReceiptStatus.APPROVED);
         if(approvedExists){
-            throw new IllegalArgumentException("이미 승인된 영수증이 있습니다.");
+            throw new ConflictException("이미 승인된 영수증이 있습니다.");
         }
         expirePendingReceipt(visitedPlace);
 
@@ -55,7 +58,7 @@ public class ReceiptService {
         String extension = switch(contentType) {
             case "image/jpeg" -> "jpg";
             case "image/png" -> "png";
-            default -> throw new IllegalArgumentException("지원하지 않는 이미지 형식입니다.");
+            default -> throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
         };
         String objectKey = "receipt/" + receiptUuid + "." + extension;
 
@@ -79,7 +82,7 @@ public class ReceiptService {
     @Transactional
     public void saveOcrResult(UUID receiptUuid, Receipt.OcrStatus ocrStatus, String ocrPlaceName, String ocrPlaceAddress, LocalDateTime ocrPaidAt) {
         Receipt receipt = receiptRepository.findByReceiptUuid(receiptUuid)
-                .orElseThrow(() -> new IllegalArgumentException("영수증 인증 요청이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("영수증 인증 요청이 없습니다."));
 
         if (receipt.getVerifyStatus() != Receipt.ReceiptStatus.PENDING) {
             return;
@@ -134,10 +137,10 @@ public class ReceiptService {
 
     public ReceiptStatusResponse getReceiptStatus(Long receiptId) {
         Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())
-                .orElseThrow(() ->  new IllegalArgumentException("영수증을 찾을 수 없습니다."));
+                .orElseThrow(() ->  new ResourceNotFoundException("영수증을 찾을 수 없습니다."));
 
         boolean gachaAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;
 
@@ -174,7 +177,7 @@ public class ReceiptService {
             return;
         }
 
-        throw new IllegalArgumentException("처리 중인 영수증이 있습니다.");
+        throw new ConflictException("처리 중인 영수증이 있습니다.");
     }
 
 

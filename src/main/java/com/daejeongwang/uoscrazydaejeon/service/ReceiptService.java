@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,12 +30,14 @@ public class ReceiptService {
     private final S3Service s3Service;
     private final AddressApiClient addressApiClient;
 
+    private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
+
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMember_Id(visitedPlaceId, member.getId())
+        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
                 .orElseThrow(() -> new IllegalArgumentException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
         boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());
@@ -156,7 +159,7 @@ public class ReceiptService {
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
                 && receipt.getOcrStatus() == Receipt.OcrStatus.PENDING
-                && !receipt.getCreatedAt().plusMinutes(10).isAfter(LocalDateTime.now());
+                && !receipt.getCreatedAt().plus(PENDING_VALID_DURATION).isAfter(LocalDateTime.now());
     }
 
     private void expirePendingReceipt(VisitedPlace visitedPlace) {

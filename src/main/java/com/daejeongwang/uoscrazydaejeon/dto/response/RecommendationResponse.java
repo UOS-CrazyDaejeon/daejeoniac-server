@@ -8,5 +8,6 @@ import java.util.List;
 @Getter
 @Builder
 public class RecommendationResponse {
+    private String sessionId;
     private List<RecommendedPlaceResponse> recommendations;
 }

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/sync")
 @RequiredArgsConstructor
 @Tag(name = "Admin-PlaceSync", description = "관리자 전용 장소 관리 API")
-public class PlaceSyncController {
+public class AdminPlaceSyncController {
 
     private final PlaceService placeService;
     private final PlaceSearchService placeSearchService;

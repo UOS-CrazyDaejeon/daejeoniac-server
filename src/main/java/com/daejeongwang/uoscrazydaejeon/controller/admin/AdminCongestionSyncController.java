@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/sync")
 @RequiredArgsConstructor
 @Tag(name = "Admin-Congestion", description = "관리자 전용 혼잡도 관리 API")
-public class CongestionSyncController {
+public class AdminCongestionSyncController {
 
     private final CongestionService congestionService;
 

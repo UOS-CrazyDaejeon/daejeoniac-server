@@ -36,4 +36,18 @@ public class RewardItem {
 
     // 현재 남은 총 수량
     private Integer currentStock;
+
+    public RewardItem updateRewardItem(
+            Double probability,
+            Integer rewardValue,
+            Integer totalStock,
+            Integer currentStock
+    ) {
+        this.probability = probability;
+        this.rewardValue = rewardValue;
+        this.totalStock = totalStock;
+        this.currentStock = currentStock;
+
+        return this;
+    }
 }

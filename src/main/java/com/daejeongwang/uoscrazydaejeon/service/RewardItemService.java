@@ -36,9 +36,11 @@ public class RewardItemService {
 
     // 상품 정보 수정
     @Transactional
-    public RewardItem updateRewardItem(Long rewardId, RewardItemUpdateRequest request) {
-        RewardItem rewardItem = rewardItemRepsitory.findById(rewardId)
+    public RewardItem updateRewardItem(Long rewardItemId, RewardItemUpdateRequest request) {
+        RewardItem rewardItem = rewardItemRepsitory.findById(rewardItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 상품이 존재하지 않습니다."));
+
+        validateProbabilitySumForUpdate(rewardItemId, request.probability());
 
         rewardItem.updateRewardItem(
                 request.probability(),
@@ -53,5 +55,19 @@ public class RewardItemService {
     // 상품 목록 전체 조회
     public List<RewardItem> findAll() {
         return rewardItemRepsitory.findAll();
+    }
+
+    // 확률값 검증 메서드
+    // TODO : 오차 범위 발생할 수 있다고 하는데, 오차 범위 허용 해주는 것도 필요해보임.
+    private void validateProbabilitySumForUpdate(Long rewardItemId, Double newProbability) {
+        double totalProbabilityExceptCurrent = rewardItemRepsitory.findAll()
+                .stream()
+                .filter(rewardItem -> !rewardItem.getId().equals(rewardItemId))
+                .mapToDouble(RewardItem::getProbability)
+                .sum();
+
+        if (totalProbabilityExceptCurrent + newProbability > 1.0) {
+            throw new IllegalArgumentException("상품 확률 총합은 1을 초과할 수 없습니다.");
+        }
     }
 }

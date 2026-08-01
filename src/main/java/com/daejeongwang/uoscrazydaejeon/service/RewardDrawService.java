@@ -1,5 +1,6 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
+import com.daejeongwang.uoscrazydaejeon.dto.response.RewardDrawLogResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.RewardDrawResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
@@ -55,6 +56,17 @@ public class RewardDrawService {
         RewardDrawLog savedLog = rewardDrawLogRepository.save(rewardDrawLog);
 
         return RewardDrawResponse.from(savedLog);
+    }
+
+    // 내 뽑기 기록 조회
+    // TODO : 로그인 구현 뒤 내 memberId가 들어가도록 설정 필요
+    public List<RewardDrawLogResponse> findMyRewardDrawLogs(Long memberId) {
+        List<RewardDrawLog> rewardDrawLogs = rewardDrawLogRepository.findAllByMember_IdOrderByCreatedAtDesc(memberId);
+
+        return rewardDrawLogs
+                .stream()
+                .map(RewardDrawLogResponse::from)
+                .toList();
     }
 
     // 랜덤 선택

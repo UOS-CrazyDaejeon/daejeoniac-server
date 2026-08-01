@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -197,4 +198,9 @@ public class ReceiptService {
         return earthRadius * c;
     }
 
+    // 내 영수증 조회
+    // TODO : 로그인 구현 후 memberId에 내 memberId 넣기
+//    public List<Receipt> getMyReceipts(Long memberId) {
+//        return receiptRepository.findBy
+//    }
 }

@@ -143,7 +143,7 @@ public class ReceiptService {
 
         return ReceiptStatusResponse.builder()
                 .receiptId(receipt.getReceiptId())
-                .placeId(receipt.getVisitedPlace().getPlace().getPlaceId())
+                .placeId(receipt.getVisitedPlace().getPlace().getId())
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
                 .ocrStatus(receipt.getOcrStatus())

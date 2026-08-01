@@ -50,4 +50,12 @@ public class RewardItem {
 
         return this;
     }
+
+    public void decreaseStock() {
+        if (currentStock <= 0) {
+            throw new IllegalStateException("재고가 없습니다.");
+        }
+
+        this.currentStock--;
+    }
 }

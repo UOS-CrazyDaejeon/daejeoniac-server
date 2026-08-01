@@ -33,4 +33,11 @@ public class Member {
 
     // 임시(역할이 애매해서 통일 필요)
     private Integer coupon;
+
+    public void addPoint(Integer point) {
+        if(this.point == null)
+            this.point = 0;
+
+        this.point += point;
+    }
 }

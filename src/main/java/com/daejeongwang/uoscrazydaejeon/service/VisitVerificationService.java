@@ -62,7 +62,7 @@ public class VisitVerificationService {
 
         return VisitVerificationResponse.builder()
                 .visitedPlaceId(savedVisitedPlace.getVisitedPlaceId())
-                .placeId(place.getPlaceId())
+                .placeId(place.getId())
                 .visitedAt(savedVisitedPlace.getVisitedAt())
                 .build();
     }

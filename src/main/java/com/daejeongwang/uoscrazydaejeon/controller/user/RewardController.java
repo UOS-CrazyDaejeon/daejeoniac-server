@@ -1,6 +1,8 @@
 package com.daejeongwang.uoscrazydaejeon.controller.user;
 
+import com.daejeongwang.uoscrazydaejeon.dto.response.RewardDrawResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.RewardItemResponse;
+import com.daejeongwang.uoscrazydaejeon.service.RewardDrawService;
 import com.daejeongwang.uoscrazydaejeon.service.RewardItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.List;
 public class RewardController {
 
     private final RewardItemService rewardItemService;
+    private final RewardDrawService rewardDrawService;
 
     // 전체 상품 조회
     @GetMapping
@@ -30,6 +34,14 @@ public class RewardController {
                 .toList();
 
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/draw")
+    @Operation(summary = "승인된 영수증에 대한 상품 뽑기", description = "승인된 영수증에 대해 랜덤한 상품을 뽑습니다.")
+    public ResponseEntity<RewardDrawResponse> drawReward(@RequestParam Long memberId, @RequestParam Long visitedPlaceId) {
+        RewardDrawResponse response = rewardDrawService.drawReward(memberId, visitedPlaceId);
+
+        return ResponseEntity.ok(response);
     }
 
 }

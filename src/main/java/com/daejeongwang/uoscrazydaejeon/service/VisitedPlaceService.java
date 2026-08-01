@@ -43,7 +43,7 @@ public class VisitedPlaceService {
         return visitedPlaces.stream()
                 .map(visitedPlace -> VisitedPlaceListResponse.builder()
                         .visitedPlaceId(visitedPlace.getVisitedPlaceId())
-                        .placeId(visitedPlace.getPlace().getPlaceId())
+                        .placeId(visitedPlace.getPlace().getId())
                         .placeName(visitedPlace.getPlace().getPlaceName())
                         .visitedAt(visitedPlace.getVisitedAt())
                         .receiptAvailability(

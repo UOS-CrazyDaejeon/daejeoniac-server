@@ -1,4 +1,4 @@
-package com.daejeongwang.uoscrazydaejeon.controller;
+package com.daejeongwang.uoscrazydaejeon.controller.user;
 
 
 import com.daejeongwang.uoscrazydaejeon.dto.response.VisitedPlaceListResponse;

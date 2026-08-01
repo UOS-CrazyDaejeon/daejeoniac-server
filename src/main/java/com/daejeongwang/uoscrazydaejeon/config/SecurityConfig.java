@@ -19,7 +19,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers(
-                                "/api/v1/admin/sync/**"
+                                "/api/v1/admin/**"
                         ).permitAll()
                         .anyRequest().permitAll()
                 )

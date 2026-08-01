@@ -1,4 +1,4 @@
-package com.daejeongwang.uoscrazydaejeon.controller;
+package com.daejeongwang.uoscrazydaejeon.controller.admin;
 
 import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/admin/sync")
 @RequiredArgsConstructor
-@Tag(name = "Admin", description = "관리자 API")
+@Tag(name = "Admin-Congestion", description = "관리자 전용 혼잡도 관리 API")
 public class CongestionSyncController {
 
     private final CongestionService congestionService;

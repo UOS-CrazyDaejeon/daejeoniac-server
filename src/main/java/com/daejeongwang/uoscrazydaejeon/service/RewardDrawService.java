@@ -74,10 +74,10 @@ public class RewardDrawService {
         double random = Math.random();
         double cumulativeProbability = 0.0;
 
-        for (RewardItem rewardItem : rewardItems) {
+        for(RewardItem rewardItem : rewardItems) {
             cumulativeProbability += rewardItem.getProbability();
 
-            if (random <= cumulativeProbability) {
+            if(random <= cumulativeProbability) {
                 return rewardItem;
             }
         }

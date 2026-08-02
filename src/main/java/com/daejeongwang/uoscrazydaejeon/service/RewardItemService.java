@@ -66,7 +66,7 @@ public class RewardItemService {
                 .mapToDouble(RewardItem::getProbability)
                 .sum();
 
-        if (totalProbabilityExceptCurrent + newProbability > 1.0) {
+        if(totalProbabilityExceptCurrent + newProbability > 1.0) {
             throw new IllegalArgumentException("상품 확률 총합은 1을 초과할 수 없습니다.");
         }
     }

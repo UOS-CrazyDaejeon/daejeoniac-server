@@ -24,7 +24,6 @@ public class MemberService {
                 .nickname(member.getNickname())
                 .phone(member.getPhone())
                 .point(member.getPoint())
-                .coupon(member.getCoupon())
                 .build();
     }
 

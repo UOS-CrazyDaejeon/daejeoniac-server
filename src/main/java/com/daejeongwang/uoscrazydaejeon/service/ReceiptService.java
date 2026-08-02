@@ -33,8 +33,8 @@ public class ReceiptService {
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
     @Transactional
-    public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
-        Member member = memberRepository.findById(1L)
+    public ReceiptUploadUrlResponse issueUploadUrl(Long memberId, Long visitedPlaceId, String contentType) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
         VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
@@ -133,8 +133,8 @@ public class ReceiptService {
         receipt.ocrSuccess(ocrPlaceName, ocrPlaceAddress, ocrPaidAt, valid);
     }
 
-    public ReceiptStatusResponse getReceiptStatus(Long receiptId) {
-        Member member = memberRepository.findById(1L)
+    public ReceiptStatusResponse getReceiptStatus(Long memberId, Long receiptId) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
         Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,7 +41,9 @@ public class RewardController {
 
     @GetMapping("/draw")
     @Operation(summary = "승인된 영수증에 대한 상품 뽑기", description = "승인된 영수증에 대해 랜덤한 상품을 뽑습니다.")
-    public ResponseEntity<RewardDrawResponse> drawReward(@RequestParam Long memberId, @RequestParam Long visitedPlaceId) {
+    public ResponseEntity<RewardDrawResponse> drawReward(Authentication authentication, @RequestParam Long visitedPlaceId) {
+        Long memberId = Long.valueOf(authentication.getName());
+
         RewardDrawResponse response = rewardDrawService.drawReward(memberId, visitedPlaceId);
 
         return ResponseEntity.ok(response);
@@ -48,7 +51,9 @@ public class RewardController {
 
     @GetMapping("/me/draw-logs")
     @Operation(summary = "뽑기 기록 조회", description = "나의 뽑기 기록을 조회합니다.")
-    public ResponseEntity<List<RewardDrawLogResponse>> getMyDrawLogs(Long memberId) {
+    public ResponseEntity<List<RewardDrawLogResponse>> getMyDrawLogs(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
         List<RewardDrawLogResponse> response = rewardDrawService.findMyRewardDrawLogs(memberId);
 
         return ResponseEntity.ok(response);

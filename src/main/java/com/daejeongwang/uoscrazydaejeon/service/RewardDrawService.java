@@ -59,7 +59,6 @@ public class RewardDrawService {
     }
 
     // 내 뽑기 기록 조회
-    // TODO : 로그인 구현 뒤 내 memberId가 들어가도록 설정 필요
     public List<RewardDrawLogResponse> findMyRewardDrawLogs(Long memberId) {
         List<RewardDrawLog> rewardDrawLogs = rewardDrawLogRepository.findAllByMember_IdOrderByCreatedAtDesc(memberId);
 

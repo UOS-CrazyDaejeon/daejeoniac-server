@@ -23,9 +23,7 @@ public class VisitedPlaceService {
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
-    // TODO : 내 memberId 들어가도록
-    public List<VisitedPlaceListResponse> getMyVisitedPlaces() {
-        Long memberId = 1L;
+    public List<VisitedPlaceListResponse> getMyVisitedPlaces(Long memberId) {
         LocalDateTime now = LocalDateTime.now();
 
         List<VisitedPlace> visitedPlaces = visitedPlaceRepository.findAllByMember_IdOrderByVisitedAtDesc(memberId);

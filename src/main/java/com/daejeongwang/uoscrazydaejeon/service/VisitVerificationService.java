@@ -28,8 +28,8 @@ public class VisitVerificationService {
     private static final long MAX_MEASUREMENT_AGE_MINUTES = 5;
 
     @Transactional
-    public VisitVerificationResponse verifyVisit(Long placeId, VisitVerificationRequest request) {
-        Member member = memberRepository.findById(1L)
+    public VisitVerificationResponse verifyVisit(Long memberId, Long placeId, VisitVerificationRequest request) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
         Place place = placeRepository.findById(placeId)

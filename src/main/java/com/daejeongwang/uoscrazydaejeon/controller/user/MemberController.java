@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +28,7 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    // TODO : 로그인 기능 구현 뒤 GET member/me API로 변경 예정
-    @GetMapping("/{memberId}")
+    @GetMapping("/me")
     @Operation(summary = "내 정보 조회", description = "현재 로그인 된 사용자의 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공"),
@@ -43,15 +43,15 @@ public class MemberController {
                             examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
                     ))
     })
-    public ResponseEntity<MemberResponse> getMemberInfo(@PathVariable Long memberId) {
+    public ResponseEntity<MemberResponse> getMemberInfo(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
         MemberResponse response = memberService.findMemberById(memberId);
 
         return ResponseEntity.ok(response);
     }
 
-    // TODO : 파라미터를 member로 받지 말고 현재 로그인 된 사용자의 포인트 조회 기능으로 수정 필요
-    // @GetMapping("/me/points")
-    @GetMapping("/{memberId}/points")
+     @GetMapping("/me/points")
     @Operation(summary = "내 포인트 조회", description = "현재 로그인 된 사용자의 포인트를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "회원 포인트 조회 성공"),
@@ -66,7 +66,9 @@ public class MemberController {
                             examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
                     ))
     })
-    public ResponseEntity<PointResponse> getMemberPoints(@PathVariable Long memberId) {
+    public ResponseEntity<PointResponse> getMemberPoints(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
         PointResponse response = memberService.getMemberPoint(memberId);
 
         return ResponseEntity.ok(response);

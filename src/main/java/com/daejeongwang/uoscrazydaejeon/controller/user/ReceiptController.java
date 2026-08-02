@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,10 +24,13 @@ public class ReceiptController {
 
     @PostMapping("/upload-url")
     public ResponseEntity<ReceiptUploadUrlResponse> createUploadUrl(
+            Authentication authentication,
             @RequestParam Long visitedPlaceId,
             @RequestParam String contentType
     ) {
-        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(visitedPlaceId, contentType);
+        Long memberId = Long.valueOf(authentication.getName());
+
+        ReceiptUploadUrlResponse response = receiptService.issueUploadUrl(memberId, visitedPlaceId, contentType);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -45,8 +49,10 @@ public class ReceiptController {
     }
 
     @GetMapping("/{receiptId}/status")
-    public ResponseEntity<ReceiptStatusResponse> getReceiptStatus(@PathVariable Long receiptId) {
-        ReceiptStatusResponse response = receiptService.getReceiptStatus(receiptId);
+    public ResponseEntity<ReceiptStatusResponse> getReceiptStatus(Authentication authentication, @PathVariable Long receiptId) {
+        Long memberId = Long.valueOf(authentication.getName());
+
+        ReceiptStatusResponse response = receiptService.getReceiptStatus(memberId, receiptId);
 
         return ResponseEntity.ok(response);
     }

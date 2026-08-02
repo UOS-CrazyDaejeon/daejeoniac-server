@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,10 +19,13 @@ public class VisitVerificationController {
 
     @PostMapping("/{placeId}/visit-verifications")
     public ResponseEntity<VisitVerificationResponse> verifyVisit(
+            Authentication authentication,
             @PathVariable("placeId") Long placeId,
             @Valid @RequestBody VisitVerificationRequest request
     ) {
-        VisitVerificationResponse response = visitVerificationService.verifyVisit(placeId, request);
+        Long memberId = Long.valueOf(authentication.getName());
+
+        VisitVerificationResponse response = visitVerificationService.verifyVisit(memberId, placeId, request);
 
         return ResponseEntity.ok(response);
     }

@@ -2,6 +2,7 @@ package com.daejeongwang.uoscrazydaejeon.controller.user;
 
 import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
+import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
@@ -21,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -112,6 +114,16 @@ public class ReceiptController {
         Long memberId = Long.valueOf(authentication.getName());
 
         ReceiptStatusResponse response = receiptService.getReceiptStatus(memberId, receiptId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "내 영수증 조회", description = "현재 로그인 된 사용자가 등록한 영수증을 조회합니다.")
+    public ResponseEntity<List<ReceiptResponse>> getAllReceipt(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
+        List<ReceiptResponse> response = receiptService.getMyReceipts(memberId);
 
         return ResponseEntity.ok(response);
     }

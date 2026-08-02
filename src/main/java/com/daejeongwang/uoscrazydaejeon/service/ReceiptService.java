@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.AddressApiResponse;
@@ -198,9 +199,11 @@ public class ReceiptService {
         return earthRadius * c;
     }
 
-    // 내 영수증 조회
-    // TODO : 로그인 구현 후 memberId에 내 memberId 넣기
-//    public List<Receipt> getMyReceipts(Long memberId) {
-//        return receiptRepository.findBy
-//    }
+     // 내 영수증 조회
+    public List<ReceiptResponse> getMyReceipts(Long memberId) {
+        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
+                .stream()
+                .map(ReceiptResponse::from)
+                .toList();
+    }
 }

@@ -2,6 +2,7 @@ package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.dto.request.LoginRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.request.SignUpRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.response.KakaoResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.LoginResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.SignUpResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.TokenResponse;
@@ -11,6 +12,7 @@ import com.daejeongwang.uoscrazydaejeon.exception.AuthenticationFailedException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RefreshTokenRepository;
 import com.daejeongwang.uoscrazydaejeon.security.JwtProvider;
+import com.daejeongwang.uoscrazydaejeon.util.KakaoUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +28,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final KakaoUtil kakaoUtil;
 
     // 관리자 회원 가입
     @Transactional
@@ -135,6 +138,32 @@ public class AuthService {
         );
 
         return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    // 카카오 로그인
+    @Transactional
+    public LoginResponse kakaoLogin(String kakaoAuthorizationCode) {
+
+        KakaoResponse.OAuthToken kakaoOAuthToken = kakaoUtil.requestKakaoToken(kakaoAuthorizationCode);
+        String kakaoAccessToken = kakaoOAuthToken.getAccess_token();
+        KakaoResponse.KakaoProfile kakaoProfile = kakaoUtil.requestKakaoProfile(kakaoAccessToken);
+
+        String kakaoLoginId = "kakao_" + kakaoProfile.getId();
+        String kakaoNickname = kakaoProfile.getKakao_account().getProfile().getNickname();
+
+        Member member = memberRepository.findByLoginId(kakaoLoginId)
+                .orElseGet(() -> {
+                    Member newMember = Member.builder()
+                            .loginId(kakaoLoginId)
+                            .password(passwordEncoder.encode("KAKAO_USER"))
+                            .role(Member.Role.USER)
+                            .memberName(kakaoNickname)
+                            .build();
+
+                    return memberRepository.save(newMember);
+                });
+
+        return issueLoginToken(member);
     }
 
 

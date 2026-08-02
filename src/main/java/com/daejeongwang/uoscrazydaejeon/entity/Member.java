@@ -65,6 +65,8 @@ public class Member {
                 .build();
     }
 
-    // 임시(역할이 애매해서 통일 필요)
-//    private Integer coupon;
+    public void updateProfile(String nickname, String phone) {
+        this.nickname = nickname;
+        this.phone = phone;
+    }
 }

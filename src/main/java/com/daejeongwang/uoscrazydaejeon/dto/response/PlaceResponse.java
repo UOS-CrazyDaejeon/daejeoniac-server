@@ -35,8 +35,14 @@ public class PlaceResponse {
     @Schema(description = "동", example = "은행동")
     private String dong;
 
-    @Schema(description = "카테고리", example = "일반 음식점")
-    private String category;
+    @Schema(description = "카테고리", example = "여행")
+    private String categoryLarge;
+
+    @Schema(description = "카테고리", example = "관광, 명소")
+    private String categoryMedium;
+
+    @Schema(description = "카테고리", example = "테마파크")
+    private String categorySmall;
 
     public static PlaceResponse from(Place place) {
 
@@ -49,7 +55,9 @@ public class PlaceResponse {
                 place.getLongitude(),
                 place.getGu(),
                 place.getDong(),
-                place.getCategoryLarge()
+                place.getCategoryLarge(),
+                place.getCategoryMedium(),
+                place.getCategorySmall()
         );
     }
 }

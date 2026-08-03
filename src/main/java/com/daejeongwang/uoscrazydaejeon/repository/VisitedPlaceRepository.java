@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public interface VisitedPlaceRepository extends JpaRepository<VisitedPlace,Long> {
     boolean existsByMemberAndPlaceAndVisitedAtGreaterThanEqualAndVisitedAtLessThan(Member member, Place place, LocalDateTime start, LocalDateTime end);
-    Optional<VisitedPlace> findByVisitedPlaceIdAndMember_Id(Long visitedPlaceId, Long memberId);
+    Optional<VisitedPlace> findByIdAndMember_Id(Long visitedPlaceId, Long memberId);
 
     @EntityGraph(attributePaths = "place")
     List<VisitedPlace> findAllByMember_IdOrderByVisitedAtDesc(Long memberId);
@@ -25,10 +25,10 @@ public interface VisitedPlaceRepository extends JpaRepository<VisitedPlace,Long>
     @Query("""
         select vp
         from VisitedPlace vp
-        where vp.visitedPlaceId = :visitedPlaceId
+        where vp.id = :visitedPlaceId
           and vp.member.id = :memberId
         """)
-    Optional<VisitedPlace> findByVisitedPlaceIdAndMemberIdForUpdate(
+    Optional<VisitedPlace> findByIdAndMemberIdForUpdate(
             @Param("visitedPlaceId") Long visitedPlaceId,
             @Param("memberId") Long memberId
     );

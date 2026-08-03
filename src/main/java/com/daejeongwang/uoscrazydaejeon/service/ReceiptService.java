@@ -41,7 +41,7 @@ public class ReceiptService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
-        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
+        VisitedPlace visitedPlace = visitedPlaceRepository.findByIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
         boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());
@@ -75,7 +75,7 @@ public class ReceiptService {
         Receipt savedReceipt = receiptRepository.save(receipt);
 
         return ReceiptUploadUrlResponse.builder()
-                .receiptId(savedReceipt.getReceiptId())
+                .receiptId(savedReceipt.getId())
                 .uploadUrl(uploadUrl)
                 .expiresIn(300)
                 .build();
@@ -141,13 +141,13 @@ public class ReceiptService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
-        Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())
+        Receipt receipt = receiptRepository.findByIdAndVisitedPlace_Member_Id(receiptId, member.getId())
                 .orElseThrow(() ->  new ResourceNotFoundException("영수증을 찾을 수 없습니다."));
 
         boolean gachaAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;
 
         return ReceiptStatusResponse.builder()
-                .receiptId(receipt.getReceiptId())
+                .receiptId(receipt.getId())
                 .placeId(receipt.getVisitedPlace().getPlace().getId())
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())

@@ -16,7 +16,7 @@ public record RewardDrawLogResponse(
     public static RewardDrawLogResponse from(RewardDrawLog log) {
         return new RewardDrawLogResponse(
                 log.getId(),
-                log.getReceipt().getReceiptId(),
+                log.getReceipt().getId(),
                 log.getRewardItem().getId(),
                 log.getRewardItemType(),
                 log.getRewardValue(),

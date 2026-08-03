@@ -19,8 +19,8 @@ public record ReceiptResponse(
         boolean rewardDrawAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;
 
         return new ReceiptResponse(
-                receipt.getReceiptId(),
-                receipt.getVisitedPlace().getVisitedPlaceId(),
+                receipt.getId(),
+                receipt.getVisitedPlace().getId(),
                 receipt.getVisitedPlace().getPlace().getId(),
                 receipt.getVisitedPlace().getPlace().getPlaceName(),
                 receipt.getVerifyStatus(),

@@ -28,7 +28,7 @@ public class RewardDrawService {
     // 상품 뽑기 로직
     @Transactional
     public RewardDrawResponse drawReward(Long memberId, Long visitedPlaceId) {
-        Receipt receipt = receiptRepository.findByVisitedPlace_VisitedPlaceIdAndVisitedPlace_Member_Id(visitedPlaceId, memberId)
+        Receipt receipt = receiptRepository.findByVisitedPlace_IdAndVisitedPlace_Member_Id(visitedPlaceId, memberId)
                 .orElseThrow(() -> new IllegalArgumentException("승인된 영수증이 아니거나 방문한 장소 아닙니다."));
 
         if(receipt.getVerifyStatus() != Receipt.ReceiptStatus.APPROVED) {

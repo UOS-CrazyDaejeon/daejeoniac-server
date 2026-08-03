@@ -2,7 +2,6 @@ package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.CongestionApiClient;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.CongestionItemResponse;
-import com.daejeongwang.uoscrazydaejeon.dto.response.api.ShoppingItemResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Congestion;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.repository.CongestionRepository;
@@ -59,5 +58,9 @@ public class CongestionService {
 
         return Double.valueOf(value);
     }
+
+    // 특정 장소에 대한 congestion 전체 조회
+
+
 
 }

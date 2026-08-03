@@ -23,8 +23,7 @@ public class VisitedPlaceService {
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
-    public List<VisitedPlaceListResponse> getMyVisitedPlaces() {
-        Long memberId = 1L;
+    public List<VisitedPlaceListResponse> getMyVisitedPlaces(Long memberId) {
         LocalDateTime now = LocalDateTime.now();
 
         List<VisitedPlace> visitedPlaces = visitedPlaceRepository.findAllByMember_IdOrderByVisitedAtDesc(memberId);
@@ -43,7 +42,7 @@ public class VisitedPlaceService {
         return visitedPlaces.stream()
                 .map(visitedPlace -> VisitedPlaceListResponse.builder()
                         .visitedPlaceId(visitedPlace.getVisitedPlaceId())
-                        .placeId(visitedPlace.getPlace().getPlaceId())
+                        .placeId(visitedPlace.getPlace().getId())
                         .placeName(visitedPlace.getPlace().getPlaceName())
                         .visitedAt(visitedPlace.getVisitedAt())
                         .receiptAvailability(

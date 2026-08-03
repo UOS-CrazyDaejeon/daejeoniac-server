@@ -24,4 +24,10 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
             List<VisitedPlace> visitedPlaces,
             List<Receipt.ReceiptStatus> verifyStatuses
     );
+
+    Optional<Receipt> findByVisitedPlace(VisitedPlace visitedPlace);
+
+    Optional<Receipt> findByVisitedPlace_VisitedPlaceIdAndVisitedPlace_Member_Id(Long visitedPlaceId, Long memberId);
+
+    List<Receipt> findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(Long memberId);
 }

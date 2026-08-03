@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.AddressApiResponse;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,8 +37,8 @@ public class ReceiptService {
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
     @Transactional
-    public ReceiptUploadUrlResponse issueUploadUrl(Long visitedPlaceId, String contentType) {
-        Member member = memberRepository.findById(1L)
+    public ReceiptUploadUrlResponse issueUploadUrl(Long memberId, Long visitedPlaceId, String contentType) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
@@ -135,8 +137,8 @@ public class ReceiptService {
         receipt.ocrSuccess(ocrPlaceName, ocrPlaceAddress, ocrPaidAt, valid);
     }
 
-    public ReceiptStatusResponse getReceiptStatus(Long receiptId) {
-        Member member = memberRepository.findById(1L)
+    public ReceiptStatusResponse getReceiptStatus(Long memberId, Long receiptId) {
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())
@@ -146,7 +148,7 @@ public class ReceiptService {
 
         return ReceiptStatusResponse.builder()
                 .receiptId(receipt.getReceiptId())
-                .placeId(receipt.getVisitedPlace().getPlace().getPlaceId())
+                .placeId(receipt.getVisitedPlace().getPlace().getId())
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
                 .ocrStatus(receipt.getOcrStatus())
@@ -200,4 +202,11 @@ public class ReceiptService {
         return earthRadius * c;
     }
 
+     // 내 영수증 조회
+    public List<ReceiptResponse> getMyReceipts(Long memberId) {
+        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
+                .stream()
+                .map(ReceiptResponse::from)
+                .toList();
+    }
 }

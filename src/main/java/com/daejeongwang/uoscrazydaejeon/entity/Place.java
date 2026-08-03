@@ -15,9 +15,12 @@ public class Place {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long placeId;
+    @Column(name = "place_id")
+    private Long id;
 
     private String placeName;
+
+    private String tag;
 
     @Column(name = "place_description", columnDefinition = "TEXT")
     private String placeDescription;

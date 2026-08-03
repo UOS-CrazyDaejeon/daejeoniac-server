@@ -1,9 +1,6 @@
 package com.daejeongwang.uoscrazydaejeon.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,15 +12,25 @@ import java.time.LocalDateTime;
 @Builder
 public class Member {
 
+    public enum Role {
+        USER,
+        ADMIN
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String loginId;
 
+    private Role role;
+
     private String password;
 
     private String memberName;
+
+    @Column(unique = true)
+    private String nickname;
 
     private LocalDateTime createdAt;
 
@@ -31,6 +38,35 @@ public class Member {
 
     private Integer point;
 
-    // 임시(역할이 애매해서 통일 필요)
-    private Integer coupon;
+    public void addPoint(Integer point) {
+        if(this.point == null)
+            this.point = 0;
+
+        this.point += point;
+    }
+
+    public static Member create(
+            String loginId,
+            Role role,
+            String password,
+            String memberName,
+            String nickname,
+            String phone
+    ) {
+        return Member.builder()
+                .loginId(loginId)
+                .role(role)
+                .password(password)
+                .memberName(memberName)
+                .nickname(nickname)
+                .phone(phone)
+                .point(0)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public void updateProfile(String nickname, String phone) {
+        this.nickname = nickname;
+        this.phone = phone;
+    }
 }

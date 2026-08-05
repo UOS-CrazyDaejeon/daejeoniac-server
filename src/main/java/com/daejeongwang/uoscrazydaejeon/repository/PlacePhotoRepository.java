@@ -8,5 +8,8 @@ import java.util.Optional;
 
 public interface PlacePhotoRepository extends JpaRepository<PlacePhoto, Long> {
     List<PlacePhoto> findAllByPlace_IdAndUploadStatusOrderByCreatedAtDesc(Long placeId, PlacePhoto.UploadStatus uploadStatus);
+
     Optional<PlacePhoto> findByIdAndMember_Id(Long placePhotoId, Long memberId);
+
+    List<PlacePhoto> findAllByMember_IdAndUploadStatusOrderByCreatedAtDesc(Long memberId, PlacePhoto.UploadStatus uploadStatus);
 }

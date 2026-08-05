@@ -4,6 +4,7 @@ import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
 import com.daejeongwang.uoscrazydaejeon.dto.request.PlacePhotoUploadUrlRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoByPlaceResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.service.PlacePhotoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +52,7 @@ public class PlacePhotoController {
     public ResponseEntity<PlacePhotoUploadUrlResponse> createUploadUrl(
             Authentication authentication,
             @PathVariable Long placeId,
-            @RequestBody PlacePhotoUploadUrlRequest request
+            @Valid @RequestBody PlacePhotoUploadUrlRequest request
     ) {
         Long memberId = Long.valueOf(authentication.getName());
 
@@ -115,5 +117,54 @@ public class PlacePhotoController {
         return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "내 장소 사진 조회", description = "현재 로그인 된 사용자가 등록한 장소사진을 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내 장소 사진 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
+                    ))
+    })
+    public ResponseEntity<List<PlacePhotoResponse>> getMyPlacePhotos(
+            Authentication authentication
+    ) {
+        Long memberId = Long.valueOf(authentication.getName());
+        List<PlacePhotoResponse> responses = placePhotoService.getMyPlacePhotos(memberId);
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
+
+    @DeleteMapping("/{placePhotoId}")
+    @Operation(summary = "장소 사진 삭제", description = "현재 로그인 된 사용자가 올린 장소 사진을 S3와 DB에서 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "장소 사진 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "장소 사진이 없거나 본인이 등록한 사진이 아님",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "서버 오류 또는 S3 삭제 실패",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
+                    ))
+    })
+    public ResponseEntity<Void> deleteMyPlacePhoto(
+            Authentication authentication,
+            @PathVariable Long placePhotoId
+    ) {
+        Long memberId = Long.valueOf(authentication.getName());
+        placePhotoService.deletePlacePhoto(memberId, placePhotoId);
+        return ResponseEntity.noContent().build();
+    }
 
 }

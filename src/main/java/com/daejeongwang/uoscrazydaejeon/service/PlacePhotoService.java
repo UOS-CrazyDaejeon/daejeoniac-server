@@ -2,6 +2,7 @@ package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.dto.request.PlacePhotoUploadUrlRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoByPlaceResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
@@ -174,5 +175,30 @@ public class PlacePhotoService {
                         .createdAt(placePhoto.getCreatedAt())
                         .build())
                 .toList();
+    }
+
+    public List<PlacePhotoResponse> getMyPlacePhotos(Long memberId) {
+        if (!memberRepository.existsById(memberId)) {
+            throw new ResourceNotFoundException("회원이 없습니다.");
+        }
+
+        return placePhotoRepository.findAllByMember_IdAndUploadStatusOrderByCreatedAtDesc(memberId, PlacePhoto.UploadStatus.COMPLETED)
+                .stream()
+                .map(placePhoto -> PlacePhotoResponse.builder()
+                        .placePhotoId(placePhoto.getId())
+                        .placeId(placePhoto.getPlace().getId())
+                        .placeName(placePhoto.getPlace().getPlaceName())
+                        .imageUrl(s3Service.createPublicUrl(placePhoto.getObjectKey()))
+                        .createdAt(placePhoto.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+    public void deletePlacePhoto(Long memberId, Long placePhotoId) {
+        PlacePhoto placePhoto = placePhotoRepository.findByIdAndMember_Id(placePhotoId, memberId)
+                .orElseThrow(() -> new ResourceNotFoundException( "장소 사진이 없거나 본인이 등록한 사진이 아닙니다."));
+
+        s3Service.deleteObject(placePhoto.getObjectKey());
+        placePhotoRepository.delete(placePhoto);
     }
 }

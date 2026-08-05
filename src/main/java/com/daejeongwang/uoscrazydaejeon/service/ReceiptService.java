@@ -15,6 +15,7 @@ import com.daejeongwang.uoscrazydaejeon.exception.UnsupportedMediaTypeException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
+import com.daejeongwang.uoscrazydaejeon.util.DistanceCalculator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class ReceiptService {
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final AddressApiClient addressApiClient;
+    private final DistanceCalculator distanceCalculator;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
@@ -121,7 +123,7 @@ public class ReceiptService {
             double receiptLatitude = Double.parseDouble(document.getLatitude());
 
             Place place = receipt.getVisitedPlace().getPlace();
-            double distance = calculateDistance(
+            double distance = distanceCalculator.calculateMeters(
                     place.getLatitude(),
                     place.getLongitude(),
                     receiptLatitude,
@@ -157,6 +159,13 @@ public class ReceiptService {
 
     }
 
+    // 내 영수증 조회
+    public List<ReceiptResponse> getMyReceipts(Long memberId) {
+        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
+                .stream()
+                .map(ReceiptResponse::from)
+                .toList();
+    }
 
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
@@ -182,31 +191,4 @@ public class ReceiptService {
         throw new ConflictException("처리 중인 영수증이 있습니다.");
     }
 
-
-    private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
-        double earthRadius = 6371000;
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-
-        double a =
-                Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                        + Math.cos(Math.toRadians(lat1))
-                        * Math.cos(Math.toRadians(lat2))
-                        * Math.sin(lonDistance / 2)
-                        * Math.sin(lonDistance / 2);
-        a = Math.max(0.0, Math.min(1.0, a));
-
-        double c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return earthRadius * c;
-    }
-
-     // 내 영수증 조회
-    public List<ReceiptResponse> getMyReceipts(Long memberId) {
-        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
-                .stream()
-                .map(ReceiptResponse::from)
-                .toList();
-    }
 }

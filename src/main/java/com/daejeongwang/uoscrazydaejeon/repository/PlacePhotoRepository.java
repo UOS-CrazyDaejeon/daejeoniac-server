@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.repository;
 
 import com.daejeongwang.uoscrazydaejeon.entity.PlacePhoto;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,5 +12,6 @@ public interface PlacePhotoRepository extends JpaRepository<PlacePhoto, Long> {
 
     Optional<PlacePhoto> findByIdAndMember_Id(Long placePhotoId, Long memberId);
 
+    @EntityGraph(attributePaths = "place")
     List<PlacePhoto> findAllByMember_IdAndUploadStatusOrderByCreatedAtDesc(Long memberId, PlacePhoto.UploadStatus uploadStatus);
 }

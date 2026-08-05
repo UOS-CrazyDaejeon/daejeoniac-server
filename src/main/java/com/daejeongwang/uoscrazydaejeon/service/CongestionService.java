@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.CongestionApiClient;
+import com.daejeongwang.uoscrazydaejeon.client.OpenAiClient;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.CongestionItemResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Congestion;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @AllArgsConstructor
@@ -59,8 +62,6 @@ public class CongestionService {
         return Double.valueOf(value);
     }
 
-    // 특정 장소에 대한 congestion 전체 조회
-
-
+    // llm 이용 congestion rate DB 저장
 
 }

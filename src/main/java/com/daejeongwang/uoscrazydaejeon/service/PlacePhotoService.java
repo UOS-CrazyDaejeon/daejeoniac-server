@@ -1,10 +1,12 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.dto.request.PlacePhotoUploadUrlRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoByPlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.PlacePhoto;
+import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.exception.UnsupportedMediaTypeException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
@@ -12,8 +14,10 @@ import com.daejeongwang.uoscrazydaejeon.repository.PlacePhotoRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -64,8 +68,6 @@ public class PlacePhotoService {
                 .expiresIn(300)
                 .build();
     }
-
-
 
     private void validateMeasurement(LocalDateTime measuredAt, Double accuracy) {
         if (measuredAt == null) {
@@ -139,4 +141,38 @@ public class PlacePhotoService {
         return earthRadius * c;
     }
 
+    @Transactional
+    public void completeUpload(Long memberId, Long placePhotoId) {
+        PlacePhoto placePhoto = placePhotoRepository.findByIdAndMember_Id(placePhotoId, memberId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "장소 사진이 없거나 본인이 등록한 사진이 아닙니다."
+                        )
+                );
+
+        if (placePhoto.getUploadStatus() == PlacePhoto.UploadStatus.COMPLETED) {
+            return;
+        }
+        if (!s3Service.existsObject(placePhoto.getObjectKey())) {
+            throw new ConflictException("S3에 업로드된 사진을 찾을 수 없습니다.");
+        }
+
+        placePhoto.complete();
+    }
+
+
+    public List<PlacePhotoByPlaceResponse> getPlacePhotosByPlace(Long placeId) {
+        if (!placeRepository.existsById(placeId)) {
+            throw new ResourceNotFoundException("장소가 없습니다.");
+        }
+
+        return placePhotoRepository.findAllByPlace_IdAndUploadStatusOrderByCreatedAtDesc(placeId, PlacePhoto.UploadStatus.COMPLETED)
+                .stream()
+                .map(placePhoto -> PlacePhotoByPlaceResponse.builder()
+                        .placePhotoId(placePhoto.getId())
+                        .imageUrl(s3Service.createPublicUrl(placePhoto.getObjectKey()))
+                        .createdAt(placePhoto.getCreatedAt())
+                        .build())
+                .toList();
+    }
 }

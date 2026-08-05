@@ -13,6 +13,11 @@ import java.time.LocalDateTime;
 @Builder
 public class PlacePhoto {
 
+    public enum UploadStatus {
+        PENDING,
+        COMPLETED
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "place_photo_id")
@@ -32,4 +37,13 @@ public class PlacePhoto {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false)
+    private UploadStatus uploadStatus = UploadStatus.PENDING;
+
+    public void complete() {
+        this.uploadStatus = UploadStatus.COMPLETED;
+    }
 }

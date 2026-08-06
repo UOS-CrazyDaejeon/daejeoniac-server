@@ -2,6 +2,7 @@ package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.dto.request.LoginRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.request.SignUpRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.response.AppleResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.KakaoResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.LoginResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.SignUpResponse;
@@ -12,6 +13,7 @@ import com.daejeongwang.uoscrazydaejeon.exception.AuthenticationFailedException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RefreshTokenRepository;
 import com.daejeongwang.uoscrazydaejeon.security.JwtProvider;
+import com.daejeongwang.uoscrazydaejeon.util.AppleUtil;
 import com.daejeongwang.uoscrazydaejeon.util.KakaoUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -29,6 +31,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final KakaoUtil kakaoUtil;
+    private final AppleUtil appleUtil;
 
     // 관리자 회원 가입
     @Transactional
@@ -166,5 +169,31 @@ public class AuthService {
         return issueLoginToken(member);
     }
 
+    // 애플 로그인
+    @Transactional
+    public LoginResponse appleLogin(String appleAuthorizationCode) {
+
+        AppleResponse.OAuthToken appleOAuthToken = appleUtil.requestAppleToken(appleAuthorizationCode);
+        AppleResponse.AppleProfile appleProfile = appleUtil.parseAppleProfile(appleOAuthToken.getId_token());
+
+        String appleLoginId = "apple_" + appleProfile.subject();
+        String appleMemberName = appleProfile.email() == null ? "Apple User" : appleProfile.email();
+
+        Member member = memberRepository.findByLoginId(appleLoginId)
+                .orElseGet(() -> {
+                    Member newMember = Member.builder()
+                            .loginId(appleLoginId)
+                            .password(passwordEncoder.encode("APPLE_USER"))
+                            .role(Member.Role.USER)
+                            .memberName(appleMemberName)
+                            .point(0)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+
+                    return memberRepository.save(newMember);
+                });
+
+        return issueLoginToken(member);
+    }
 
 }

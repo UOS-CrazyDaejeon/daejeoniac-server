@@ -1,8 +1,10 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
+import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.PlaceClickLog;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
+import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceClickLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,16 +17,19 @@ public class PlaceClickLogService {
 
     private final PlaceRepository placeRepository;
     private final PlaceClickLogRepository placeClickLogRepository;
+    private final MemberRepository memberRepository;
 
-    // TODO : 현재 로그인 사용자의 ID를 파라미터로 받기
     @Transactional
-    public void saveClickLog(Long placeId) {
+    public void saveClickLog(Long memberId, Long placeId) {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new ResourceNotFoundException("장소를 찾을 수 없습니다."));
 
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
+
         PlaceClickLog clickLog = PlaceClickLog.builder()
                 .place(place)
-                .member(null)
+                .member(member)
                 .build();
 
         placeClickLogRepository.save(clickLog);

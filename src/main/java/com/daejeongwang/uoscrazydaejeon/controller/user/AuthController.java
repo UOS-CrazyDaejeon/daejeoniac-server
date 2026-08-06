@@ -35,6 +35,12 @@ public class AuthController {
     @Value("${kakao.redirect-url}")
     private String redirectUrl;
 
+    @Value("${apple.client-id:}")
+    private String appleClientId;
+
+    @Value("${apple.redirect-url:}")
+    private String appleRedirectUrl;
+
     @Operation(summary = "accessToken 갱신", description = "refreshToken을 사용하여 새로운 accessToken을 발급받습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "accessToken 갱신 성공"),
@@ -76,6 +82,28 @@ public class AuthController {
     @GetMapping("/login/kakao")
     public ResponseEntity<LoginResponse> kakaoLogin(@RequestParam("code") String kakaoAuthorizationCode) {
         LoginResponse response = authService.kakaoLogin(kakaoAuthorizationCode);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "애플 로그인 페이지 이동", description = "Apple OAuth 인증 페이지로 리다이렉트합니다.")
+    @GetMapping("/apple")
+    public ResponseEntity<Void> redirectToApple() {
+        String encodedRedirectUri = URLEncoder.encode(appleRedirectUrl, StandardCharsets.UTF_8);
+
+        String appleAuthUrl = "https://appleid.apple.com/auth/authorize" + "?response_type=code"
+                + "&client_id=" + appleClientId
+                + "&redirect_uri=" + encodedRedirectUri;
+
+        return ResponseEntity.status(302)
+                .header("Location", appleAuthUrl)
+                .build();
+    }
+
+    @Operation(summary = "애플 로그인", description = "Apple 인가 코드로 로그인하고 JWT 토큰을 발급받습니다.")
+    @GetMapping("/login/apple")
+    public ResponseEntity<LoginResponse> appleLogin(@RequestParam("code") String appleAuthorizationCode) {
+        LoginResponse response = authService.appleLogin(appleAuthorizationCode);
 
         return ResponseEntity.ok(response);
     }

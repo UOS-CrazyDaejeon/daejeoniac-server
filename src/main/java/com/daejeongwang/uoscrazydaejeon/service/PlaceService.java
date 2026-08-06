@@ -144,8 +144,6 @@ public class PlaceService {
         return parts;
     }
 
-    // Place 조회 API Service
-
     // 전체 장소 조회
     public List<PlaceResponse> findAllPlaces(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);

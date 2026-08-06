@@ -2,6 +2,7 @@ package com.daejeongwang.uoscrazydaejeon.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,7 +29,8 @@ public class Receipt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long receiptId;
+    @Column(name = "receipt_id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visited_place_id", nullable = false)
@@ -40,6 +42,7 @@ public class Receipt {
     @Column(nullable = false)
     private String objectKey;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -60,14 +63,6 @@ public class Receipt {
     private String ocrPlaceAddress;
 
     private LocalDateTime ocrPaidAt;
-
-
-    @PrePersist
-    private void prePersist() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-    }
 
     public void ocrSuccess(
             String ocrPlaceName,

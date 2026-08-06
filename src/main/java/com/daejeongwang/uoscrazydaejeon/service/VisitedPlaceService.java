@@ -36,12 +36,12 @@ public class VisitedPlaceService {
                 List.of(Receipt.ReceiptStatus.APPROVED, Receipt.ReceiptStatus.PENDING)
         );
         Map<Long, List<Receipt>> receiptMap = receipts.stream().collect(Collectors.groupingBy(
-                receipt -> receipt.getVisitedPlace().getVisitedPlaceId()
+                receipt -> receipt.getVisitedPlace().getId()
         ));
 
         return visitedPlaces.stream()
                 .map(visitedPlace -> VisitedPlaceListResponse.builder()
-                        .visitedPlaceId(visitedPlace.getVisitedPlaceId())
+                        .visitedPlaceId(visitedPlace.getId())
                         .placeId(visitedPlace.getPlace().getId())
                         .placeName(visitedPlace.getPlace().getPlaceName())
                         .visitedAt(visitedPlace.getVisitedAt())
@@ -49,7 +49,7 @@ public class VisitedPlaceService {
                                 getReceiptAvailability(
                                         visitedPlace,
                                         receiptMap.getOrDefault(
-                                                visitedPlace.getVisitedPlaceId(),
+                                                visitedPlace.getId(),
                                                 List.of()
                                         ),
                                         now

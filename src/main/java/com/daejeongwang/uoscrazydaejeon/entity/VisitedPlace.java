@@ -16,7 +16,8 @@ public class VisitedPlace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long visitedPlaceId;
+    @Column(name = "visited_place_id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)

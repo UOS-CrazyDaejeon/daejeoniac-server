@@ -5,8 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -77,6 +81,48 @@ public class GlobalExceptionHandler {
                 .body(resultDto);
     }
 
+    // Conflict
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ResultDto> handleConflict(ConflictException e) {
+        logger.error("ConflictException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("ConflictException : " + e.getMessage())
+                .code(HttpStatus.CONFLICT.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.CONFLICT);
+    }
+
+    // Forbidden
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ResultDto> handleForbidden(ForbiddenException e) {
+        logger.error("ForbiddenException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("ForbiddenException : " + e.getMessage())
+                .code(HttpStatus.FORBIDDEN.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.FORBIDDEN);
+    }
+
+    // UnsupportedMediaType
+    @ExceptionHandler(UnsupportedMediaTypeException.class)
+    public ResponseEntity<ResultDto> handleUnsupportedMediaType(UnsupportedMediaTypeException e) {
+        logger.error("UnsupportedMediaTypeException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("UnsupportedMediaTypeException : " + e.getMessage())
+                .code(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+                .build();
+
+        return new ResponseEntity<>(resultDto, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
     // IllegalArgumentException
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ResultDto> handleIllegalArgument(IllegalArgumentException e) {
@@ -108,19 +154,22 @@ public class GlobalExceptionHandler {
                 .body(resultDto);
     }
 
-    @ExceptionHandler(AppleApiException.class)
-    public ResponseEntity<ResultDto> handleAppleApiException(AppleApiException e) {
-        logger.error("AppleApiException : {}", e.getMessage());
+    // 요청 형식 오류
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ResultDto> handleBadRequest(Exception e) {
+        logger.error(e.getClass().getSimpleName() + " : {}", e.getMessage());
 
         ResultDto resultDto = ResultDto.builder()
                 .success(false)
-                .message("AppleApiException : " + e.getMessage())
-                .code(e.getStatus().value())
+                .message(e.getClass().getSimpleName() + " : " + e.getMessage())
+                .code(HttpStatus.BAD_REQUEST.value())
                 .build();
 
-        return ResponseEntity
-                .status(e.getStatus())
-                .body(resultDto);
+        return new ResponseEntity<>(resultDto, HttpStatus.BAD_REQUEST);
     }
-
 }

@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrResultRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
@@ -9,9 +10,13 @@ import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
+import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
+import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
+import com.daejeongwang.uoscrazydaejeon.exception.UnsupportedMediaTypeException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
+import com.daejeongwang.uoscrazydaejeon.util.DistanceCalculator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,26 +35,27 @@ public class ReceiptService {
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final AddressApiClient addressApiClient;
+    private final DistanceCalculator distanceCalculator;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
     @Transactional
     public ReceiptUploadUrlResponse issueUploadUrl(Long memberId, Long visitedPlaceId, String contentType) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
-        VisitedPlace visitedPlace = visitedPlaceRepository.findByVisitedPlaceIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
-                .orElseThrow(() -> new IllegalArgumentException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
+        VisitedPlace visitedPlace = visitedPlaceRepository.findByIdAndMemberIdForUpdate(visitedPlaceId, member.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("방문 기록이 없거나 본인의 방문 기록이 아닙니다."));
 
         boolean visitIsToday = visitedPlace.getVisitedDate().equals(LocalDate.now());
 
         if (!visitIsToday) {
-            throw new IllegalArgumentException("방문 인증 당일에만 영수증을 등록할 수 있습니다.");
+            throw new ConflictException("방문 인증 당일에만 영수증을 등록할 수 있습니다.");
         }
 
         boolean approvedExists = receiptRepository.existsByVisitedPlaceAndVerifyStatus(visitedPlace, Receipt.ReceiptStatus.APPROVED);
         if(approvedExists){
-            throw new IllegalArgumentException("이미 승인된 영수증이 있습니다.");
+            throw new ConflictException("이미 승인된 영수증이 있습니다.");
         }
         expirePendingReceipt(visitedPlace);
 
@@ -57,7 +63,7 @@ public class ReceiptService {
         String extension = switch(contentType) {
             case "image/jpeg" -> "jpg";
             case "image/png" -> "png";
-            default -> throw new IllegalArgumentException("지원하지 않는 이미지 형식입니다.");
+            default -> throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
         };
         String objectKey = "receipt/" + receiptUuid + "." + extension;
 
@@ -72,16 +78,16 @@ public class ReceiptService {
         Receipt savedReceipt = receiptRepository.save(receipt);
 
         return ReceiptUploadUrlResponse.builder()
-                .receiptId(savedReceipt.getReceiptId())
+                .receiptId(savedReceipt.getId())
                 .uploadUrl(uploadUrl)
                 .expiresIn(300)
                 .build();
     }
 
     @Transactional
-    public void saveOcrResult(UUID receiptUuid, Receipt.OcrStatus ocrStatus, String ocrPlaceName, String ocrPlaceAddress, LocalDateTime ocrPaidAt) {
-        Receipt receipt = receiptRepository.findByReceiptUuid(receiptUuid)
-                .orElseThrow(() -> new IllegalArgumentException("영수증 인증 요청이 없습니다."));
+    public void saveOcrResult(ReceiptOcrResultRequest request) {
+        Receipt receipt = receiptRepository.findByReceiptUuid(request.getReceiptUuid())
+                .orElseThrow(() -> new ResourceNotFoundException("영수증 인증 요청이 없습니다."));
 
         if (receipt.getVerifyStatus() != Receipt.ReceiptStatus.PENDING) {
             return;
@@ -93,32 +99,33 @@ public class ReceiptService {
         }
         if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) { return; }
 
-        if (ocrStatus == Receipt.OcrStatus.PENDING) {
+        if (request.getOcrStatus() == Receipt.OcrStatus.PENDING) {
             throw new IllegalArgumentException("OCR 처리중 입니다.");
         }
-        if(ocrStatus == Receipt.OcrStatus.FAILED) {
+        if(request.getOcrStatus() == Receipt.OcrStatus.FAILED) {
             receipt.ocrFailure();
             return;
         }
 
-        if (ocrPlaceName == null || ocrPlaceName.isBlank()
-                || ocrPlaceAddress == null || ocrPlaceAddress.isBlank()
-                || ocrPaidAt == null) {
+        if (request.getOcrPlaceName() == null || request.getOcrPlaceName().isBlank()
+                || request.getOcrPlaceAddress() == null || request.getOcrPlaceAddress().isBlank()
+                || request.getOcrPaidAt() == null) {
             throw new IllegalArgumentException(
                     "OCR 성공 결과에는 장소명, 주소와 결제 시간이 필요합니다."
             );
         }
 
-        AddressApiResponse response = addressApiClient.searchCoordinateByAddress(ocrPlaceAddress);
+        Place place = receipt.getVisitedPlace().getPlace();
+
+        AddressApiResponse addressResponse = addressApiClient.searchCoordinateByAddress(request.getOcrPlaceAddress());
 
         boolean placeMatched = false;
-        if(response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()){
-            AddressApiResponse.Document document = response.getDocuments().get(0);
+        if(addressResponse != null && addressResponse.getDocuments() != null && !addressResponse.getDocuments().isEmpty()){
+            AddressApiResponse.Document document = addressResponse.getDocuments().get(0);
             double receiptLongitude = Double.parseDouble(document.getLongitude());
             double receiptLatitude = Double.parseDouble(document.getLatitude());
 
-            Place place = receipt.getVisitedPlace().getPlace();
-            double distance = calculateDistance(
+            double distance = distanceCalculator.calculateMeters(
                     place.getLatitude(),
                     place.getLongitude(),
                     receiptLatitude,
@@ -128,23 +135,23 @@ public class ReceiptService {
             placeMatched = distance <= 100.0;
         }
 
-        boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
+        boolean paidOnVisitedDate = request.getOcrPaidAt().toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
         boolean valid = placeMatched && paidOnVisitedDate;
 
-        receipt.ocrSuccess(ocrPlaceName, ocrPlaceAddress, ocrPaidAt, valid);
+        receipt.ocrSuccess(request.getOcrPlaceName(), request.getOcrPlaceAddress(), request.getOcrPaidAt(), valid);
     }
 
     public ReceiptStatusResponse getReceiptStatus(Long memberId, Long receiptId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
-        Receipt receipt = receiptRepository.findByReceiptIdAndVisitedPlace_Member_Id(receiptId, member.getId())
-                .orElseThrow(() ->  new IllegalArgumentException("영수증을 찾을 수 없습니다."));
+        Receipt receipt = receiptRepository.findByIdAndVisitedPlace_Member_Id(receiptId, member.getId())
+                .orElseThrow(() ->  new ResourceNotFoundException("영수증을 찾을 수 없습니다."));
 
         boolean gachaAvailable = receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED;
 
         return ReceiptStatusResponse.builder()
-                .receiptId(receipt.getReceiptId())
+                .receiptId(receipt.getId())
                 .placeId(receipt.getVisitedPlace().getPlace().getId())
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
@@ -154,6 +161,13 @@ public class ReceiptService {
 
     }
 
+    // 내 영수증 조회
+    public List<ReceiptResponse> getMyReceipts(Long memberId) {
+        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
+                .stream()
+                .map(ReceiptResponse::from)
+                .toList();
+    }
 
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
@@ -176,34 +190,7 @@ public class ReceiptService {
             return;
         }
 
-        throw new IllegalArgumentException("처리 중인 영수증이 있습니다.");
+        throw new ConflictException("처리 중인 영수증이 있습니다.");
     }
 
-
-    private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
-        double earthRadius = 6371000;
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-
-        double a =
-                Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                        + Math.cos(Math.toRadians(lat1))
-                        * Math.cos(Math.toRadians(lat2))
-                        * Math.sin(lonDistance / 2)
-                        * Math.sin(lonDistance / 2);
-        a = Math.max(0.0, Math.min(1.0, a));
-
-        double c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return earthRadius * c;
-    }
-
-     // 내 영수증 조회
-    public List<ReceiptResponse> getMyReceipts(Long memberId) {
-        return receiptRepository.findAllByVisitedPlace_Member_IdOrderByCreatedAtDesc(memberId)
-                .stream()
-                .map(ReceiptResponse::from)
-                .toList();
-    }
 }

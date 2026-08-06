@@ -19,6 +19,9 @@ public class OpenAiClient {
     @Value("${openai.congestion.model}")
     private String congestionModel;
 
+    @Value("${openai.visitor-count.model}")
+    private String visitorCountModel;
+
     public String generateCongestion(String prompt) {
         Map<String, Object> requestBody = Map.of(
                 "model", congestionModel,
@@ -50,4 +53,23 @@ public class OpenAiClient {
                 "OpenAI 응답에서 텍스트를 찾지 못했습니다: " + response
         );
     }
+
+    public String generateVisitorCount(String prompt) {
+        Map<String, Object> requestBody = Map.of(
+                "model", visitorCountModel,
+                "input", prompt
+        );
+
+        return WebClient.create("https://api.openai.com")
+                .post()
+                .uri("/v1/responses")
+                .header("Authorization", "Bearer " + openApiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(this::extractOutputText)
+                .block();
+    }
+
 }

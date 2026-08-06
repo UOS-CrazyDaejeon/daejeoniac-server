@@ -2,10 +2,10 @@ package com.daejeongwang.uoscrazydaejeon.controller.user;
 
 import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
+import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrResultRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
-import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,16 +14,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/receipts")
@@ -80,13 +78,9 @@ public class ReceiptController {
                     ))
     })
     public ResponseEntity<Void> saveOcrResult(
-            @RequestParam UUID receiptUuid,
-            @RequestParam Receipt.OcrStatus ocrStatus,
-            @RequestParam(required = false) String ocrPlaceName,
-            @RequestParam(required = false) String ocrPlaceAddress,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime ocrPaidAt
+            @Valid @RequestBody ReceiptOcrResultRequest request
     ) {
-        receiptService.saveOcrResult(receiptUuid, ocrStatus, ocrPlaceName, ocrPlaceAddress, ocrPaidAt);
+        receiptService.saveOcrResult(request);
 
         return ResponseEntity.noContent().build();
     }

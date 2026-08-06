@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
+import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrResultRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
@@ -84,8 +85,8 @@ public class ReceiptService {
     }
 
     @Transactional
-    public void saveOcrResult(UUID receiptUuid, Receipt.OcrStatus ocrStatus, String ocrPlaceName, String ocrPlaceAddress, LocalDateTime ocrPaidAt) {
-        Receipt receipt = receiptRepository.findByReceiptUuid(receiptUuid)
+    public void saveOcrResult(ReceiptOcrResultRequest request) {
+        Receipt receipt = receiptRepository.findByReceiptUuid(request.getReceiptUuid())
                 .orElseThrow(() -> new ResourceNotFoundException("영수증 인증 요청이 없습니다."));
 
         if (receipt.getVerifyStatus() != Receipt.ReceiptStatus.PENDING) {
@@ -98,31 +99,32 @@ public class ReceiptService {
         }
         if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) { return; }
 
-        if (ocrStatus == Receipt.OcrStatus.PENDING) {
+        if (request.getOcrStatus() == Receipt.OcrStatus.PENDING) {
             throw new IllegalArgumentException("OCR 처리중 입니다.");
         }
-        if(ocrStatus == Receipt.OcrStatus.FAILED) {
+        if(request.getOcrStatus() == Receipt.OcrStatus.FAILED) {
             receipt.ocrFailure();
             return;
         }
 
-        if (ocrPlaceName == null || ocrPlaceName.isBlank()
-                || ocrPlaceAddress == null || ocrPlaceAddress.isBlank()
-                || ocrPaidAt == null) {
+        if (request.getOcrPlaceName() == null || request.getOcrPlaceName().isBlank()
+                || request.getOcrPlaceAddress() == null || request.getOcrPlaceAddress().isBlank()
+                || request.getOcrPaidAt() == null) {
             throw new IllegalArgumentException(
                     "OCR 성공 결과에는 장소명, 주소와 결제 시간이 필요합니다."
             );
         }
 
-        AddressApiResponse response = addressApiClient.searchCoordinateByAddress(ocrPlaceAddress);
+        Place place = receipt.getVisitedPlace().getPlace();
+
+        AddressApiResponse addressResponse = addressApiClient.searchCoordinateByAddress(request.getOcrPlaceAddress());
 
         boolean placeMatched = false;
-        if(response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()){
-            AddressApiResponse.Document document = response.getDocuments().get(0);
+        if(addressResponse != null && addressResponse.getDocuments() != null && !addressResponse.getDocuments().isEmpty()){
+            AddressApiResponse.Document document = addressResponse.getDocuments().get(0);
             double receiptLongitude = Double.parseDouble(document.getLongitude());
             double receiptLatitude = Double.parseDouble(document.getLatitude());
 
-            Place place = receipt.getVisitedPlace().getPlace();
             double distance = distanceCalculator.calculateMeters(
                     place.getLatitude(),
                     place.getLongitude(),
@@ -133,10 +135,10 @@ public class ReceiptService {
             placeMatched = distance <= 100.0;
         }
 
-        boolean paidOnVisitedDate = ocrPaidAt.toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
+        boolean paidOnVisitedDate = request.getOcrPaidAt().toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());
         boolean valid = placeMatched && paidOnVisitedDate;
 
-        receipt.ocrSuccess(ocrPlaceName, ocrPlaceAddress, ocrPaidAt, valid);
+        receipt.ocrSuccess(request.getOcrPlaceName(), request.getOcrPlaceAddress(), request.getOcrPaidAt(), valid);
     }
 
     public ReceiptStatusResponse getReceiptStatus(Long memberId, Long receiptId) {

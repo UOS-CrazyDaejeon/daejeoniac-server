@@ -139,6 +139,21 @@ public class GlobalExceptionHandler {
                 .body(resultDto);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ResultDto> handleIllegalState(IllegalStateException e) {
+        logger.error("IllegalStateException : {}", e.getMessage());
+
+        ResultDto resultDto = ResultDto.builder()
+                .success(false)
+                .message("IllegalStateException : " + e.getMessage())
+                .code(HttpStatus.BAD_REQUEST.value())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(resultDto);
+    }
+
     // 요청 형식 오류
     @ExceptionHandler({
             MethodArgumentNotValidException.class,

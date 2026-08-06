@@ -40,4 +40,12 @@ public class AdminCongestionSyncController {
 
         return ResponseEntity.ok("각 장소 혼잡도 동기화 완료");
     }
+
+    @PostMapping("/congestion/forecast")
+    @Operation(summary = "LLM 기반 장소 예상 혼잡도 저장", description = "각 장소에 대한 30일치 LLM 기반 날짜 별 예상 혼잡도를 DB에 저장합니다.")
+    public ResponseEntity<String> generateCongestionForecasts() {
+        congestionService.generateCongestions();
+
+        return ResponseEntity.ok("향후 30일 혼잡도 예측 저장 완료");
+    }
 }

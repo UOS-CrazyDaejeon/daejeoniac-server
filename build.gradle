@@ -65,3 +65,7 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named('processResources') {
+	exclude 'application-local.properties'
+}

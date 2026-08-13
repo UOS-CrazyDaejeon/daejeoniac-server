@@ -20,9 +20,6 @@ src/main/resources/application-secret.yml
 src/main/resources/application-dev.properties
 src/main/resources/application-dev.yml
 
-# 운영 환경 설정을 로컬에 두는 경우
-src/main/resources/application-prod.properties
-src/main/resources/application-prod.yml
 
 ### Logs ###
 logs/

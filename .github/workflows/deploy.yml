@@ -27,12 +27,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
-      - name: Grant execute permission for Gradle
-        run: chmod +x gradlew
-
-      - name: Build JAR
-        run: ./gradlew clean build -x test
+      - name: Build application
+        run: ./gradlew clean build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
@@ -63,14 +61,13 @@ jobs:
             --parameters 'commands=[
               "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin '"$ECR_REGISTRY"'",
               "docker pull '"$ECR_REGISTRY"'/'"${{ env.ECR_REPOSITORY }}"':'"$IMAGE_TAG"'",
-              "docker stop daejeoniac-server || true",
-              "docker rm daejeoniac-server || true",
-              "docker run -d --name daejeoniac-server --restart unless-stopped -p 8080:8080 --env-file /home/ec2-user/docker.env '"$ECR_REGISTRY"'/'"${{ env.ECR_REPOSITORY }}"':'"$IMAGE_TAG"' --spring.profiles.active=prod"
+              "docker rm -f daejeoniac-server || true",
+              "docker run -d --name daejeoniac-server --restart unless-stopped -p 8080:8080 --env-file /home/ec2-user/docker.env '"$ECR_REGISTRY"'/'"${{ env.ECR_REPOSITORY }}"':'"$IMAGE_TAG"' --spring.profiles.active=prod",
+              "sleep 30",
+              "docker inspect -f '\''{{.State.Running}}'\'' daejeoniac-server | grep true"
             ]' \
             --query "Command.CommandId" \
             --output text)
-
-          echo "SSM Command ID: $COMMAND_ID"
 
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \

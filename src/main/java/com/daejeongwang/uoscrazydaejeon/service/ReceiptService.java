@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AddressApiClient;
+import com.daejeongwang.uoscrazydaejeon.client.AiServerClient;
 import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrResultRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
@@ -36,6 +37,7 @@ public class ReceiptService {
     private final S3Service s3Service;
     private final AddressApiClient addressApiClient;
     private final DistanceCalculator distanceCalculator;
+    private final AiServerClient aiServerClient;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
 
@@ -100,7 +102,7 @@ public class ReceiptService {
         if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) { return; }
 
         if (request.getOcrStatus() == Receipt.OcrStatus.PENDING) {
-            throw new IllegalArgumentException("OCR 처리중 입니다.");
+            throw new IllegalArgumentException("완료되지 않은 OCR 상태입니다.");
         }
         if(request.getOcrStatus() == Receipt.OcrStatus.FAILED) {
             receipt.ocrFailure();
@@ -168,6 +170,35 @@ public class ReceiptService {
                 .map(ReceiptResponse::from)
                 .toList();
     }
+
+    @Transactional(noRollbackFor = ConflictException.class)
+    public void requestOcr(Long memberId, Long receiptId) {
+        Receipt receipt = receiptRepository.findByIdAndVisitedPlace_Member_Id(receiptId, memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("영수증을 찾을 수 없습니다."));
+
+        if(receipt.getVerifyStatus() != Receipt.ReceiptStatus.PENDING) {
+            throw new ConflictException("이미 처리가 완료된 영수증입니다.");
+        }
+
+        if (isExpired(receipt)) {
+            receipt.expire();
+            throw new ConflictException("영수증 인증 요청이 만료되었습니다.");
+        }
+
+        if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) {
+            throw new ConflictException("이미 OCR 처리가 완료된 영수증입니다.");
+        }
+
+        if (!s3Service.existsObject(receipt.getObjectKey())) {
+            throw new ConflictException("영수증 이미지 업로드가 완료되지 않았습니다.");
+        }
+
+        aiServerClient.requestOcr(
+                receipt.getReceiptUuid(),
+                receipt.getObjectKey()
+        );
+    }
+
 
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING

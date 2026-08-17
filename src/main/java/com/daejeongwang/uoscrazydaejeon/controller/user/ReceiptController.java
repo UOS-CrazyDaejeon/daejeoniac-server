@@ -122,4 +122,19 @@ public class ReceiptController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{receiptId}/request-ocr")
+    @Operation(
+            summary = "영수증 OCR 처리 요청",
+            description = "S3에 업로드된 영수증의 OCR 처리를 요청합니다."
+    )
+    public ResponseEntity<Void> requestOcr(
+            Authentication authentication,
+            @PathVariable Long receiptId
+    ) {
+        Long memberId = Long.valueOf(authentication.getName());
+
+        receiptService.requestOcr(memberId, receiptId);
+        return ResponseEntity.accepted().build();
+    }
+
 }

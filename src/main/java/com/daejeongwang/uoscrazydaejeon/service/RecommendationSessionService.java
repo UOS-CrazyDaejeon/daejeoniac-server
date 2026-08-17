@@ -26,7 +26,7 @@ public class RecommendationSessionService {
         return sessionId;
     }
 
-    public RecommendationSession getSession(String sessionId) {
+    public RecommendationSession getSession(Long memberId, String sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId;
 
         Object value = redisTemplate.opsForValue().get(key);
@@ -35,7 +35,13 @@ public class RecommendationSessionService {
             return null;
         }
 
-        return (RecommendationSession) value;
+        RecommendationSession session = (RecommendationSession) value;
+
+        if (!session.getMemberId().equals(memberId)) {
+            return null;
+        }
+
+        return session;
     }
 }
 

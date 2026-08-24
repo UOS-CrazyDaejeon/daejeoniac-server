@@ -41,7 +41,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
-                                "/api/v1/admin/auth/**"
+                                "/api/v1/admin/auth/**",
+                                "/api/v1/receipts/ocr-result"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/admin/**"

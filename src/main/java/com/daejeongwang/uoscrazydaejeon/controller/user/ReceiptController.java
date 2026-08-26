@@ -2,7 +2,6 @@ package com.daejeongwang.uoscrazydaejeon.controller.user;
 
 import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
-import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrResultRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptStatusResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.ReceiptUploadUrlResponse;
@@ -14,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,30 +59,6 @@ public class ReceiptController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/ocr-result")
-    @Operation(summary = "OCR 결과 저장", description = "영수증 OCR 처리 결과를 저장하고 승인 여부를 결정합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "OCR 결과 저장 성공",
-                    content = @Content),
-            @ApiResponse(responseCode = "400", description = "잘못된 OCR 결과 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ResultDto.class),
-                            examples = @ExampleObject(value = SwaggerExamples.BAD_REQUEST)
-                    )),
-            @ApiResponse(responseCode = "500", description = "서버 오류",
-                    content = @Content(
-                            schema = @Schema(implementation = ResultDto.class),
-                            examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
-                    ))
-    })
-    public ResponseEntity<Void> saveOcrResult(
-            @Valid @RequestBody ReceiptOcrResultRequest request
-    ) {
-        receiptService.saveOcrResult(request);
-
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/{receiptId}/status")
     @Operation(summary = "영수증 상태 조회", description = "현재 로그인 된 사용자의 영수증 인증 상태를 조회합니다.")
     @ApiResponses({
@@ -122,19 +96,19 @@ public class ReceiptController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{receiptId}/request-ocr")
+    @PostMapping("/{receiptId}/ocr")
     @Operation(
-            summary = "영수증 OCR 처리 요청",
-            description = "S3에 업로드된 영수증의 OCR 처리를 요청합니다."
+            summary = "영수증 OCR 처리 요청 및 OCR 결과 저장",
+            description = "S3에 업로드된 영수증의 OCR 처리를 요청하고 결과를 저장합니다."
     )
-    public ResponseEntity<Void> requestOcr(
+    public ResponseEntity<ReceiptStatusResponse> processOcr(
             Authentication authentication,
             @PathVariable Long receiptId
     ) {
         Long memberId = Long.valueOf(authentication.getName());
 
-        receiptService.requestOcr(memberId, receiptId);
-        return ResponseEntity.accepted().build();
+        ReceiptStatusResponse response = receiptService.processOcr(memberId, receiptId);
+        return ResponseEntity.ok(response);
     }
 
 }

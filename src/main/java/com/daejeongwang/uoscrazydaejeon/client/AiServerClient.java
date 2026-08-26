@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.client;
 
 import com.daejeongwang.uoscrazydaejeon.dto.request.ReceiptOcrRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.response.api.ReceiptOcrResultResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -27,15 +28,15 @@ public class AiServerClient {
         this.restTemplate = new RestTemplate(factory);
     }
 
-    public void requestOcr(UUID receiptUuid, String objectKey) {
+    public ReceiptOcrResultResponse requestOcr(UUID receiptUuid, String objectKey) {
 
         ReceiptOcrRequest request =
                 new ReceiptOcrRequest(receiptUuid, objectKey);
 
-        restTemplate.postForEntity(
+        return restTemplate.postForObject(
                 aiServerUrl + "/ocr",
                 request,
-                Void.class
+                ReceiptOcrResultResponse.class
         );
     }
 }

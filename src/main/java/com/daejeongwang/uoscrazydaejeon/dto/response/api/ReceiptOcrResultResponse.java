@@ -1,4 +1,4 @@
-package com.daejeongwang.uoscrazydaejeon.dto.request;
+package com.daejeongwang.uoscrazydaejeon.dto.response.api;
 
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReceiptOcrResultRequest {
+public class ReceiptOcrResultResponse {
     @NotNull
     private UUID receiptUuid;
 

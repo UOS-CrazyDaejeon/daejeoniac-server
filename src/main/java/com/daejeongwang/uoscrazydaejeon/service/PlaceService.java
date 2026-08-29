@@ -188,4 +188,23 @@ public class PlaceService {
                 .map(PlaceResponse::from);
     }
 
+    public List<PlaceResponse> getAllNearbyPlacesByPlaceId(Long placeId) {
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new ResourceNotFoundException("장소를 찾을 수 없습니다."));
+
+        if (place.getLatitude() == null || place.getLongitude() == null) {
+            throw new RuntimeException("해당 장소의 좌표 정보가 없습니다.");
+        }
+
+        return placeRepository.findAllNearbyPlacesWithoutPaging(
+                        placeId,
+                        place.getLatitude(),
+                        place.getLongitude(),
+                        1000.0
+                )
+                .stream()
+                .map(PlaceResponse::from)
+                .toList();
+    }
+
 }

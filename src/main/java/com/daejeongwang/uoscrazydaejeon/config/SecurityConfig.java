@@ -42,7 +42,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/api/v1/admin/auth/**",
-                                "/api/v1/receipts/ocr"
+                                "/api/v1/receipts/ocr",
+                                "/api/v1/recommendations/similar-places",
+                                "/api/v1/recommendations/next-places"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/admin/**"
@@ -63,6 +65,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "http://localhost:5173",
+                "http://localhost:8080",
                 "https://api.daejeoniac.site"
         ));
 

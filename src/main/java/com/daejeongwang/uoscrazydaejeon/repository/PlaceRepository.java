@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PlaceRepository extends JpaRepository<Place, Long> {
@@ -37,5 +38,27 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
             @Param("longitude") Double longitude,
             @Param("radius") Double radius,
             Pageable pageable
+    );
+
+    @Query(value = """
+    SELECT *
+    FROM place p
+    WHERE p.place_id <> :placeId
+      AND p.latitude IS NOT NULL
+      AND p.longitude IS NOT NULL
+      AND ST_Distance_Sphere(
+            POINT(p.longitude, p.latitude),
+            POINT(:longitude, :latitude)
+          ) <= :radius
+    ORDER BY ST_Distance_Sphere(
+            POINT(p.longitude, p.latitude),
+            POINT(:longitude, :latitude)
+          )
+    """, nativeQuery = true)
+    List<Place> findAllNearbyPlacesWithoutPaging(
+            @Param("placeId") Long placeId,
+            @Param("latitude") Double latitude,
+            @Param("longitude") Double longitude,
+            @Param("radius") Double radius
     );
 }

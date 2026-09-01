@@ -8,6 +8,7 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoResponse;
 import com.daejeongwang.uoscrazydaejeon.service.PlacePhotoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -57,6 +58,14 @@ public class PlacePhotoController {
             Authentication authentication,
             @PathVariable Long placeId,
             @RequestPart("image") MultipartFile image,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            encoding = @Encoding(
+                                    name = "request",
+                                    contentType = MediaType.APPLICATION_JSON_VALUE
+                            )
+                    )
+            )
             @Valid @RequestPart("request") PlacePhotoUploadRequest request
     ) {
         Long memberId = Long.valueOf(authentication.getName());

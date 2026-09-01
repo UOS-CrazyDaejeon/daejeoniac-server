@@ -1,6 +1,7 @@
 package com.daejeongwang.uoscrazydaejeon.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class PlacePhotoUploadRequest {
 
     @NotNull

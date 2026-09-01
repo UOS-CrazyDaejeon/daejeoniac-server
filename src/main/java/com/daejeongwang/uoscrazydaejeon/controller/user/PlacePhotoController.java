@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -59,18 +60,13 @@ public class PlacePhotoController {
             Authentication authentication,
             @PathVariable Long placeId,
             @RequestPart("image") MultipartFile image,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            encoding = @Encoding(
-                                    name = "request",
-                                    contentType = MediaType.APPLICATION_JSON_VALUE
-                            )
-                    )
-            )
-            @Parameter(description = "사진 위치 및 촬영 정보")
-            @Valid @RequestPart("request") PlacePhotoUploadRequest request
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Double accuracy,
+            @RequestParam LocalDateTime measuredAt
     ) {
         Long memberId = Long.valueOf(authentication.getName());
+        PlacePhotoUploadRequest request = new PlacePhotoUploadRequest(latitude, longitude, accuracy, measuredAt);
 
         PlacePhotoResponse response = placePhotoService.uploadPlacePhoto(memberId, placeId, image, request);
 

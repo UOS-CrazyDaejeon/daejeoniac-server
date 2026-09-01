@@ -4,6 +4,7 @@ package com.daejeongwang.uoscrazydaejeon.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
@@ -45,6 +46,16 @@ public class S3Service {
                 s3Presigner.presignPutObject(presignRequest);
 
         return presignedRequest.url().toString();
+    }
+
+    public void uploadImage(String objectKey, byte[] imageBytes, String contentType) {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
     }
 
     public String createPublicUrl(String objectKey) {

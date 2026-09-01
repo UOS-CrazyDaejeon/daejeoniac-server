@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PlacePhotoRepository extends JpaRepository<PlacePhoto, Long> {
-    List<PlacePhoto> findAllByPlace_IdAndUploadStatusOrderByCreatedAtDesc(Long placeId, PlacePhoto.UploadStatus uploadStatus);
+    List<PlacePhoto> findAllByPlace_IdOrderByCreatedAtDesc(Long placeId);
 
     Optional<PlacePhoto> findByIdAndMember_Id(Long placePhotoId, Long memberId);
 
     @EntityGraph(attributePaths = "place")
-    List<PlacePhoto> findAllByMember_IdAndUploadStatusOrderByCreatedAtDesc(Long memberId, PlacePhoto.UploadStatus uploadStatus);
+    List<PlacePhoto> findAllByMember_IdOrderByCreatedAtDesc(Long memberId);
 }

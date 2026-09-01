@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-public class PlacePhotoUploadUrlRequest {
-    @NotNull
-    private String contentType;
+public class PlacePhotoUploadRequest {
 
     @NotNull
     private Double latitude;

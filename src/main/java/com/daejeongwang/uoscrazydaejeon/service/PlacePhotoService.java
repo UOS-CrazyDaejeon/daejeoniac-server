@@ -1,25 +1,26 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
-import com.daejeongwang.uoscrazydaejeon.dto.request.PlacePhotoUploadUrlRequest;
+import com.daejeongwang.uoscrazydaejeon.client.AiServerClient;
+import com.daejeongwang.uoscrazydaejeon.dto.request.PlacePhotoUploadRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoByPlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoResponse;
-import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoUploadUrlResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.entity.PlacePhoto;
-import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.exception.UnsupportedMediaTypeException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlacePhotoRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PlacePhotoService {
@@ -28,8 +29,9 @@ public class PlacePhotoService {
     private final PlaceRepository placeRepository;
     private final S3Service s3Service;
     private final PlaceProximityVerifier placeProximityVerifier;
+    private final AiServerClient aiServerClient;
 
-    public PlacePhotoUploadUrlResponse issueUploadUrl(Long memberId, Long placeId, PlacePhotoUploadUrlRequest request) {
+    public PlacePhotoResponse uploadPlacePhoto(Long memberId, Long placeId, MultipartFile image, PlacePhotoUploadRequest request){
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
@@ -44,17 +46,19 @@ public class PlacePhotoService {
                 request.getMeasuredAt()
         );
 
-        String contentType = request.getContentType();
-        String extension = switch (contentType) {
-            case "image/jpeg" -> "jpg";
-            case "image/png" -> "png";
-            default -> throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
-        };
+        String contentType = image.getContentType();
+        if (!List.of("image/jpeg", "image/png").contains(contentType)) {
+            throw new UnsupportedMediaTypeException(
+                    "지원하지 않는 이미지 형식입니다."
+            );
+        }
+
+        byte[] mosaicImage = aiServerClient.requestFaceMosaic(image);
 
         UUID photoUuid = UUID.randomUUID();
-        String objectKey = "place-photos/" + photoUuid + "." + extension;
+        String objectKey = "place-photos/" + photoUuid + ".jpg";
 
-        String uploadUrl = s3Service.createUploadUrl(objectKey, contentType);
+        s3Service.uploadImage(objectKey, mosaicImage, "image/jpeg");
 
         PlacePhoto placePhoto = PlacePhoto.builder()
                 .member(member)
@@ -62,41 +66,33 @@ public class PlacePhotoService {
                 .objectKey(objectKey)
                 .build();
 
-        PlacePhoto savedPlacePhoto = placePhotoRepository.save(placePhoto);
+        try {
+            PlacePhoto savedPlacePhoto = placePhotoRepository.save(placePhoto);
 
-        return PlacePhotoUploadUrlResponse.builder()
-                .placePhotoId(savedPlacePhoto.getId())
-                .uploadUrl(uploadUrl)
-                .expiresIn(300)
-                .build();
-    }
+            return PlacePhotoResponse.builder()
+                    .placePhotoId(savedPlacePhoto.getId())
+                    .placeId(place.getId())
+                    .placeName(place.getPlaceName())
+                    .imageUrl(s3Service.createPublicUrl(objectKey))
+                    .createdAt(savedPlacePhoto.getCreatedAt())
+                    .build();
+        } catch (Exception e) {
+            try {
+                s3Service.deleteObject(objectKey);
+            } catch (Exception deleteException) {
+                log.error("S3 보상 삭제 실패. objectKey={}", objectKey, deleteException);
+            }
 
-    @Transactional
-    public void completeUpload(Long memberId, Long placePhotoId) {
-        PlacePhoto placePhoto = placePhotoRepository.findByIdAndMember_Id(placePhotoId, memberId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "장소 사진이 없거나 본인이 등록한 사진이 아닙니다."
-                        )
-                );
-
-        if (placePhoto.getUploadStatus() == PlacePhoto.UploadStatus.COMPLETED) {
-            return;
+            throw e;
         }
-        if (!s3Service.existsObject(placePhoto.getObjectKey())) {
-            throw new ConflictException("S3에 업로드된 사진을 찾을 수 없습니다.");
-        }
-
-        placePhoto.complete();
     }
-
 
     public List<PlacePhotoByPlaceResponse> getPlacePhotosByPlace(Long placeId) {
         if (!placeRepository.existsById(placeId)) {
             throw new ResourceNotFoundException("장소가 없습니다.");
         }
 
-        return placePhotoRepository.findAllByPlace_IdAndUploadStatusOrderByCreatedAtDesc(placeId, PlacePhoto.UploadStatus.COMPLETED)
+        return placePhotoRepository.findAllByPlace_IdOrderByCreatedAtDesc(placeId)
                 .stream()
                 .map(placePhoto -> PlacePhotoByPlaceResponse.builder()
                         .placePhotoId(placePhoto.getId())
@@ -111,7 +107,7 @@ public class PlacePhotoService {
             throw new ResourceNotFoundException("회원이 없습니다.");
         }
 
-        return placePhotoRepository.findAllByMember_IdAndUploadStatusOrderByCreatedAtDesc(memberId, PlacePhoto.UploadStatus.COMPLETED)
+        return placePhotoRepository.findAllByMember_IdOrderByCreatedAtDesc(memberId)
                 .stream()
                 .map(placePhoto -> PlacePhotoResponse.builder()
                         .placePhotoId(placePhoto.getId())

@@ -208,7 +208,7 @@ public class ReceiptService {
                     receiptLongitude
             );
 
-            placeMatched = distance <= 100.0;
+            placeMatched = distance <= 100;
         }
 
         boolean paidOnVisitedDate = result.getOcrPaidAt().toLocalDate().isEqual(receipt.getVisitedPlace().getVisitedDate());

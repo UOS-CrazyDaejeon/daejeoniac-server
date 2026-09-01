@@ -1,12 +1,14 @@
 package com.daejeongwang.uoscrazydaejeon.service;
 
 import com.daejeongwang.uoscrazydaejeon.client.AiServerClient;
+import com.daejeongwang.uoscrazydaejeon.dto.RecommendationSession;
 import com.daejeongwang.uoscrazydaejeon.dto.request.NextPlacesRecommendationRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.request.RecommendationPlaceRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.request.SimilarRecommendationRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiNextPlacesRecommendationResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiRecommendationResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiSimilarRecommendationResponse;
+import com.daejeongwang.uoscrazydaejeon.dto.response.RecommendedPlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.CongestionRepository;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,17 +33,48 @@ public class RecommendationService {
     private final CongestionRepository congestionRepository;
     private final VisitorCountRepository visitorCountRepository;
     private final AiServerClient aiServerClient;
+    private final RecommendationSessionService recommendationSessionService;
 
-    public AiSimilarRecommendationResponse recommendSimilarPlaces(Long placeId) {
+    public AiSimilarRecommendationResponse recommendSimilarPlaces(Long memberId, Long placeId) {
         SimilarRecommendationRequest request = createSimilarRecommendationRequest(placeId);
 
-        return aiServerClient.requestSimilarRecommendations(request);
+        AiSimilarRecommendationResponse response = aiServerClient.requestSimilarRecommendations(request);
+        if (response == null || response.getSimilarPlaces() == null) {
+            throw new IllegalStateException("AI 추천 응답이 올바르지 않습니다.");
+        }
+
+        RecommendationSession session = RecommendationSession.builder()
+                .memberId(memberId)
+                .parentPlaceId(placeId)
+                .recommendations(toSessionRecommendations(response.getSimilarPlaces()))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UUID sessionId = recommendationSessionService.saveSession(session);
+        response.setSessionId(sessionId);
+
+        return response;
     }
 
     public AiNextPlacesRecommendationResponse recommendNextPlaces(Long memberId, Long placeId) {
         NextPlacesRecommendationRequest request = createNextPlacesRecommendationRequest(memberId, placeId);
 
-        return aiServerClient.requestNextPlacesRecommendations(request);
+        AiNextPlacesRecommendationResponse response = aiServerClient.requestNextPlacesRecommendations(request);
+        if (response == null || response.getNextPlaces() == null) {
+            throw new IllegalStateException("AI 추천 응답이 올바르지 않습니다.");
+        }
+
+        RecommendationSession session = RecommendationSession.builder()
+                .memberId(memberId)
+                .parentPlaceId(placeId)
+                .recommendations(toSessionRecommendations(response.getNextPlaces()))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UUID sessionId = recommendationSessionService.saveSession(session);
+        response.setSessionId(sessionId);
+
+        return response;
     }
 
     private SimilarRecommendationRequest createSimilarRecommendationRequest(Long placeId) {
@@ -106,5 +140,14 @@ public class RecommendationService {
                 .orElse(null);
 
         return RecommendationPlaceRequest.from(place, congestionRate, visitorCount, visitedAt);
+    }
+
+    private List<RecommendedPlaceResponse> toSessionRecommendations(List<AiRecommendationResponse> recommendations) {
+        return recommendations.stream()
+                .map(item -> RecommendedPlaceResponse.builder()
+                        .placeId(item.getPlaceId())
+                        .reason(item.getRecommendationReason())
+                        .build())
+                .toList();
     }
 }

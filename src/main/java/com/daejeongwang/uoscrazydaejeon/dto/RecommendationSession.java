@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RecommendationSession {
     private Long memberId;
+    private Long parentPlaceId;
     private List<RecommendedPlaceResponse> recommendations;
     private LocalDateTime createdAt;
 }

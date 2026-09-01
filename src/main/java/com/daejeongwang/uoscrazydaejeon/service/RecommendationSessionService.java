@@ -16,8 +16,8 @@ public class RecommendationSessionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public String saveSession(RecommendationSession session) {
-        String sessionId = UUID.randomUUID().toString();
+    public UUID saveSession(RecommendationSession session) {
+        UUID sessionId = UUID.randomUUID();
 
         String sessionKey = SESSION_KEY_PREFIX + sessionId;
 
@@ -26,7 +26,7 @@ public class RecommendationSessionService {
         return sessionId;
     }
 
-    public RecommendationSession getSession(Long memberId, String sessionId) {
+    public RecommendationSession getSession(Long memberId, UUID sessionId) {
         String key = SESSION_KEY_PREFIX + sessionId;
 
         Object value = redisTemplate.opsForValue().get(key);

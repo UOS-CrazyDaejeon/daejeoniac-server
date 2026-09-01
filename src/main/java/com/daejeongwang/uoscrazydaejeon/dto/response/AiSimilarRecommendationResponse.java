@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
@@ -20,4 +22,8 @@ public class AiSimilarRecommendationResponse {
 
     @JsonProperty("similar_places")
     private List<AiRecommendationResponse> similarPlaces;
+
+    @Setter
+    @JsonProperty("session_id")
+    private UUID sessionId;
 }

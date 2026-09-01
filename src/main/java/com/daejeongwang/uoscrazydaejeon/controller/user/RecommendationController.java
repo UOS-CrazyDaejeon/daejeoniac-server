@@ -10,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/recommendations")
@@ -23,17 +20,23 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
 
-    @GetMapping("/similar-places")
+    @PostMapping("/similar-places")
     @Operation(summary = "선택 장소 기반 유사 장소 추천", description = "선택한 장소와 1km 이내 장소 정보를 AI 서버에 전달하여 유사 장소를 추천받습니다.")
     public ResponseEntity<AiSimilarRecommendationResponse> recommendSimilarPlaces(
+            Authentication authentication,
             @RequestParam Long placeId
     ) {
-        AiSimilarRecommendationResponse response = recommendationService.recommendSimilarPlaces(placeId);
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            throw new AuthenticationFailedException("로그인이 필요한 요청입니다.");
+        }
+
+        Long memberId = Long.valueOf(authentication.getName());
+        AiSimilarRecommendationResponse response = recommendationService.recommendSimilarPlaces(memberId, placeId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/next-places")
+    @PostMapping("/next-places")
     @Operation(summary = "선택 장소와 방문 이력 기반 다음 장소 추천", description = "선택한 장소, 1km 이내 장소, 내 방문 장소 정보를 AI 서버에 전달하여 다음 장소를 추천받습니다.")
     public ResponseEntity<AiNextPlacesRecommendationResponse> recommendNextPlaces(
             Authentication authentication,

@@ -7,6 +7,7 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoByPlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlacePhotoResponse;
 import com.daejeongwang.uoscrazydaejeon.service.PlacePhotoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -66,6 +67,7 @@ public class PlacePhotoController {
                             )
                     )
             )
+            @Parameter(description = "사진 위치 및 촬영 정보")
             @Valid @RequestPart("request") PlacePhotoUploadRequest request
     ) {
         Long memberId = Long.valueOf(authentication.getName());

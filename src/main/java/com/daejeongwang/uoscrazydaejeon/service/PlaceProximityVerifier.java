@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 @RequiredArgsConstructor
@@ -43,7 +44,7 @@ public class PlaceProximityVerifier {
             throw new IllegalArgumentException("위치 정확도가 충분하지 않습니다.");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         if (measuredAt.isAfter(now)) {
             throw new IllegalArgumentException("위치 측정 시간이 현재보다 이후일 수 없습니다.");
         }

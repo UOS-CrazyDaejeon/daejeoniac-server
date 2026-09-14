@@ -4,6 +4,7 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.VisitedPlaceListResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
+import com.daejeongwang.uoscrazydaejeon.repository.RewardDrawLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +26,7 @@ public class VisitedPlaceService {
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final ReceiptRepository receiptRepository;
+    private final RewardDrawLogRepository rewardDrawLogRepository;
     private final Clock clock;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
@@ -45,6 +48,9 @@ public class VisitedPlaceService {
         Map<Long, List<Receipt>> receiptMap = receipts.stream().collect(Collectors.groupingBy(
                 receipt -> receipt.getVisitedPlace().getId()
         ));
+        Set<Long> usedReceiptIds = receipts.isEmpty()
+                ? Set.of()
+                : Set.copyOf(rewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts));
 
         return visitedPlaces.stream()
                 .map(visitedPlace -> VisitedPlaceListResponse.builder()
@@ -59,6 +65,7 @@ public class VisitedPlaceService {
                                                 visitedPlace.getId(),
                                                 List.of()
                                         ),
+                                        usedReceiptIds,
                                         now
                                 )
                         )
@@ -81,11 +88,22 @@ public class VisitedPlaceService {
         };
     }
 
-    private VisitedPlaceListResponse.ReceiptAvailability getReceiptAvailability(VisitedPlace visitedPlace, List<Receipt> receipts, Instant now) {
-        boolean hasApprovedReceipt = receipts.stream()
-                .anyMatch(receipt -> receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED);
-        if (hasApprovedReceipt) {
+    private VisitedPlaceListResponse.ReceiptAvailability getReceiptAvailability(
+            VisitedPlace visitedPlace,
+            List<Receipt> receipts,
+            Set<Long> usedReceiptIds,
+            Instant now
+    ) {
+        List<Receipt> approvedReceipts = receipts.stream()
+                .filter(receipt -> receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED)
+                .toList();
+        boolean hasUnusedApprovedReceipt = approvedReceipts.stream()
+                .anyMatch(receipt -> !usedReceiptIds.contains(receipt.getId()));
+        if (hasUnusedApprovedReceipt) {
             return VisitedPlaceListResponse.ReceiptAvailability.APPROVED;
+        }
+        if (!approvedReceipts.isEmpty()) {
+            return VisitedPlaceListResponse.ReceiptAvailability.UNAVAILABLE;
         }
 
         boolean hasValidPendingReceipt = receipts.stream()

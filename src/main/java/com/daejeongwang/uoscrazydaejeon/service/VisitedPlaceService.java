@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.Instant;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class VisitedPlaceService {
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final ReceiptRepository receiptRepository;
     private final Clock clock;
@@ -28,8 +30,10 @@ public class VisitedPlaceService {
 
     public List<VisitedPlaceListResponse> getMyVisitedPlaces(Long memberId) {
         Instant now = clock.instant();
+        LocalDate today = now.atZone(SEOUL).toLocalDate();
 
-        List<VisitedPlace> visitedPlaces = visitedPlaceRepository.findAllByMember_IdOrderByVisitedAtDesc(memberId);
+        List<VisitedPlace> visitedPlaces = visitedPlaceRepository
+                .findAllByMember_IdAndVisitedDateOrderByVisitedAtDesc(memberId, today);
         if (visitedPlaces.isEmpty()) {
             return List.of();
         }
@@ -59,8 +63,22 @@ public class VisitedPlaceService {
                                 )
                         )
                         .build())
+                .filter(response -> response.getReceiptAvailability()
+                        != VisitedPlaceListResponse.ReceiptAvailability.UNAVAILABLE)
+                .sorted(Comparator.comparingInt(response -> receiptAvailabilityPriority(
+                        response.getReceiptAvailability()
+                )))
                 .toList();
 
+    }
+
+    private int receiptAvailabilityPriority(VisitedPlaceListResponse.ReceiptAvailability availability) {
+        return switch (availability) {
+            case APPROVED -> 0;
+            case PROCESSING -> 1;
+            case AVAILABLE -> 2;
+            case UNAVAILABLE -> 3;
+        };
     }
 
     private VisitedPlaceListResponse.ReceiptAvailability getReceiptAvailability(VisitedPlace visitedPlace, List<Receipt> receipts, Instant now) {
@@ -80,7 +98,7 @@ public class VisitedPlaceService {
             return VisitedPlaceListResponse.ReceiptAvailability.PROCESSING;
         }
 
-        LocalDate today = now.atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
+        LocalDate today = now.atZone(SEOUL).toLocalDate();
 
         if (visitedPlace.getVisitedDate().equals(today)) {
             return VisitedPlaceListResponse.ReceiptAvailability.AVAILABLE;

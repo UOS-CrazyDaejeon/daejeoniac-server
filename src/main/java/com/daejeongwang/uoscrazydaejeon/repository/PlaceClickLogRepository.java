@@ -30,6 +30,17 @@ public interface PlaceClickLogRepository extends JpaRepository<PlaceClickLog, Lo
             LocalDateTime startOfNextDay
     );
 
+    @Modifying
+    @Query(value = """
+            INSERT IGNORE INTO place_click_log (member_id, place_id, clicked_at)
+            VALUES (:memberId, :placeId, :clickedAt)
+            """, nativeQuery = true)
+    int insertIgnore(
+            @Param("memberId") Long memberId,
+            @Param("placeId") Long placeId,
+            @Param("clickedAt") LocalDateTime clickedAt
+    );
+
     @Query("""
             select clickLog.place.id as placeId, count(clickLog.id) as viewerCount
             from PlaceClickLog clickLog

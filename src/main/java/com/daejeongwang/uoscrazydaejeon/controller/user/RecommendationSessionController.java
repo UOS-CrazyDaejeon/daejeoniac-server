@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
 import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
-import com.daejeongwang.uoscrazydaejeon.dto.RecommendationSession;
+import com.daejeongwang.uoscrazydaejeon.dto.response.RecommendationSessionResponse;
 import com.daejeongwang.uoscrazydaejeon.service.RecommendationSessionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +37,13 @@ public class RecommendationSessionController {
                             schema = @Schema(implementation = ResultDto.class),
                             examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)))
     })
-    public ResponseEntity<RecommendationSession> getSession(
+    public ResponseEntity<RecommendationSessionResponse> getSession(
             Authentication authentication,
             @PathVariable UUID sessionId
     ) {
         Long memberId = Long.valueOf(authentication.getName());
 
-        RecommendationSession session =
+        RecommendationSessionResponse session =
                 recommendationSessionService.getSession(memberId, sessionId);
 
         if (session == null) {

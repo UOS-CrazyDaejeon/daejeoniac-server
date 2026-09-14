@@ -8,8 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface PlaceClickLogRepository extends JpaRepository<PlaceClickLog, Long> {
+    interface PlaceClickCount {
+        Long getPlaceId();
+        Long getViewerCount();
+    }
+
     long countByPlace_Id(Long placeId);
     long countByPlace_IdAndClickedAtGreaterThanEqualAndClickedAtLessThan(
             Long placeId,
@@ -22,6 +28,20 @@ public interface PlaceClickLogRepository extends JpaRepository<PlaceClickLog, Lo
             Long placeId,
             LocalDateTime startOfDay,
             LocalDateTime startOfNextDay
+    );
+
+    @Query("""
+            select clickLog.place.id as placeId, count(clickLog.id) as viewerCount
+            from PlaceClickLog clickLog
+            where clickLog.place.id in :placeIds
+              and clickLog.clickedAt >= :startOfDay
+              and clickLog.clickedAt < :startOfNextDay
+            group by clickLog.place.id
+            """)
+    List<PlaceClickCount> countByPlaceIdsAndClickedAtBetween(
+            @Param("placeIds") List<Long> placeIds,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("startOfNextDay") LocalDateTime startOfNextDay
     );
 
     @Modifying

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record RewardDrawLogResponse(
         Long rewardDrawLogId,
         Long receiptId,
+        String placeName,
         Long rewardItemId,
         RewardItem.RewardItemType rewardItemType,
         Integer rewardValue,
@@ -17,6 +18,7 @@ public record RewardDrawLogResponse(
         return new RewardDrawLogResponse(
                 log.getId(),
                 log.getReceipt().getId(),
+                log.getReceipt().getVisitedPlace().getPlace().getPlaceName(),
                 log.getRewardItem().getId(),
                 log.getRewardItemType(),
                 log.getRewardValue(),

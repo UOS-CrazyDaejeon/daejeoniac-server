@@ -23,6 +23,9 @@ public interface VisitedPlaceRepository extends JpaRepository<VisitedPlace,Long>
     @EntityGraph(attributePaths = "place")
     List<VisitedPlace> findAllByMember_IdOrderByVisitedAtDesc(Long memberId);
 
+    @EntityGraph(attributePaths = "place")
+    List<VisitedPlace> findAllByMember_IdAndVisitedDateOrderByVisitedAtDesc(Long memberId, LocalDate visitedDate);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
         select vp

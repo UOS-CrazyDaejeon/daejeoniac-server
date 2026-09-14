@@ -20,6 +20,8 @@ import com.daejeongwang.uoscrazydaejeon.repository.VisitorCountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class RecommendationService {
 
     private static final double RADIUS = 1000.0;
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private final PlaceRepository placeRepository;
     private final VisitedPlaceRepository visitedPlaceRepository;
@@ -37,6 +40,7 @@ public class RecommendationService {
     private final VisitorCountRepository visitorCountRepository;
     private final AiServerClient aiServerClient;
     private final RecommendationSessionService recommendationSessionService;
+    private final Clock clock;
 
     public AiSimilarRecommendationResponse recommendSimilarPlaces(Long memberId, Long placeId) {
         SimilarRecommendationRequest request = createSimilarRecommendationRequest(placeId);
@@ -122,11 +126,13 @@ public class RecommendationService {
                 .stream()
                 .map(place -> toRecommendationPlaceRequest(place, null))
                 .toList();
-        List<RecommendationPlaceRequest> visitedPlaces = visitedPlaceRepository.findAllByMember_IdOrderByVisitedAtDesc(memberId)
+        LocalDate today = LocalDate.now(clock.withZone(SEOUL));
+        List<RecommendationPlaceRequest> visitedPlaces = visitedPlaceRepository
+                .findAllByMember_IdAndVisitedDateOrderByVisitedAtDesc(memberId, today)
                 .stream()
                 .map(visitedPlace -> toRecommendationPlaceRequest(
                         visitedPlace.getPlace(),
-                        LocalDateTime.ofInstant(visitedPlace.getVisitedAt(), ZoneId.of("Asia/Seoul"))
+                        LocalDateTime.ofInstant(visitedPlace.getVisitedAt(), SEOUL)
                 ))
                 .toList();
 

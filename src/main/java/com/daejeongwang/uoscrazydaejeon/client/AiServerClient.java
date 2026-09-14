@@ -43,7 +43,7 @@ public class AiServerClient {
         //AI server connect timeout
         factory.setConnectTimeout(Duration.ofSeconds(3));
         //AI server response timeout
-        factory.setReadTimeout(Duration.ofSeconds(30));
+        factory.setReadTimeout(Duration.ofSeconds(60));
 
         this.restTemplate = new RestTemplate(factory);
     }

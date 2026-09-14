@@ -24,10 +24,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @AllArgsConstructor
 public class AuthService {
+
+    private static final List<String> NICKNAME_ADJECTIVES = List.of(
+            "행복한", "용감한", "졸린", "똑똑한", "신비로운"
+    );
+    private static final List<String> NICKNAME_NOUNS = List.of(
+            "사자", "토끼", "개발자", "프로그래머", "고양이"
+    );
 
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -156,7 +165,7 @@ public class AuthService {
 
         String kakaoLoginId = "kakao_" + kakaoProfile.getId();
         String kakaoNickname = kakaoProfile.getKakao_account().getProfile().getNickname();
-        String defaultKakaoNickname = createDefaultNickname("kakao", String.valueOf(kakaoProfile.getId()));
+        String defaultKakaoNickname = createDefaultNickname(String.valueOf(kakaoProfile.getId()));
 
         Member member = memberRepository.findByLoginId(kakaoLoginId)
                 .orElseGet(() -> {
@@ -209,7 +218,7 @@ public class AuthService {
     private LoginResponse loginWithAppleProfile(AppleResponse.AppleProfile appleProfile) {
         String appleLoginId = "apple_" + appleProfile.subject();
         String appleMemberName = appleProfile.email() == null ? "Apple User" : appleProfile.email();
-        String defaultAppleNickname = createDefaultNickname("apple", appleProfile.subject());
+        String defaultAppleNickname = createDefaultNickname(appleProfile.subject());
 
         Member member = memberRepository.findByLoginId(appleLoginId)
                 .orElseGet(() -> {
@@ -229,13 +238,17 @@ public class AuthService {
         return issueLoginToken(member);
     }
 
-    private String createDefaultNickname(String provider, String providerId) {
+    private String createDefaultNickname(String providerId) {
         String suffix = providerId == null ? String.valueOf(System.currentTimeMillis()) : providerId;
         if (suffix.length() > 8) {
             suffix = suffix.substring(suffix.length() - 8);
         }
 
-        return provider + "_" + suffix;
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        String adjective = NICKNAME_ADJECTIVES.get(random.nextInt(NICKNAME_ADJECTIVES.size()));
+        String noun = NICKNAME_NOUNS.get(random.nextInt(NICKNAME_NOUNS.size()));
+
+        return adjective + noun + "_" + suffix;
     }
 
     private String defaultIfBlank(String value, String defaultValue) {

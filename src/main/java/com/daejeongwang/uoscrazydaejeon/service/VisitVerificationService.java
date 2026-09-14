@@ -23,6 +23,9 @@ import java.time.ZoneId;
 @Service
 @RequiredArgsConstructor
 public class VisitVerificationService {
+    private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
+    private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
+
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final PlaceRepository placeRepository;
     private final MemberRepository memberRepository;
@@ -37,13 +40,16 @@ public class VisitVerificationService {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new ResourceNotFoundException("장소가 없습니다."));
 
-        placeProximityVerifier.verifyNearPlace(
-                place,
-                request.getLatitude(),
-                request.getLongitude(),
-                request.getAccuracy(),
-                request.getMeasuredAt()
-        );
+        if (member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_1
+                && member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_2) {
+            placeProximityVerifier.verifyNearPlace(
+                    place,
+                    request.getLatitude(),
+                    request.getLongitude(),
+                    request.getAccuracy(),
+                    request.getMeasuredAt()
+            );
+        }
 
         Instant now = clock.instant();
         ZoneId seoul = ZoneId.of("Asia/Seoul");

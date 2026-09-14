@@ -72,25 +72,58 @@
 | API Docs | Springdoc OpenAPI / Swagger UI |
 | External APIs | 한국관광공사 OpenAPI, 대전 관광 API, Kakao API, OpenAI API, Apple API |
 | Build | Gradle |
-| Deploy | Docker, AWS EC2/RDS/S3 |
+| Deploy | Docker, AWS ECR/EC2/RDS/S3 |
 
-## Architecture
+## System Architecture
 
 ```text
-Client
-  |
-  | REST API / JWT
-  v
-Spring Boot API Server
-  |
-  |-- MySQL: 회원, 장소, 방문, 영수증, 리워드, 혼잡도, 방문자 수
-  |-- Redis: refresh token 등 캐시성 데이터
-  |-- AWS S3: 영수증/장소 이미지 저장
-  |-- Kakao API: 장소 검색, 주소 좌표 변환
-  |-- Tourism APIs: 관광지/음식점/쇼핑/방문자 수/혼잡도 데이터 수집
-  |-- OpenAI API: 데모용 혼잡도 및 방문자 수 추정
-  |-- AI Recommendation Server: 유사 장소, 다음 장소, 자연어 추천
-  |-- Apple/Kakao OAuth: 소셜 로그인
+           ┌──────────────┐     ┌──────────────────┐
+           │ GitHub main  │ ──▶ │  GitHub Actions  │
+           └──────────────┘     └─────────┬────────┘
+                                          ┼─────────────────────────────────────────────┐
+                                          │                                             │
+                                 Docker Build & Push                              SSM Run Command
+                                          │                                             │
+                                          ▼                                             │
+┌──────────────┐    ╔════════════ AWS Cloud (ap-northeast-2) ═══════════════════╗       │
+│    사용자     │    ║                                                           ║       │
+│  RN WebView  │    ║            ┌─────────────────┐                            ║       │
+└──────┬───────┘    ║            │   Amazon ECR    │                            ║       │
+       │            ║            │ Docker Registry │                            ║       │
+       │ HTTPS/JWT  ║            └────────┬────────┘                            ║       │
+       │            ║                     │ Image Pull                          ║       │
+       │            ║                     ▼                                     ║       │
+       │            ║       ┌──────────── EC2 ──────────────┐                   ║       │
+       └────────────╫───────┼──▶┌───────────────────────┐   │◀──── SSM ─────────╫───────┘
+                    ║       │   │ Nginx + Certbot       │   │                   ║
+                    ║       │   │ Reverse Proxy / TLS   │   │                   ║
+                    ║       │   └───────────┬───────────┘   │                   ║
+                    ║       │               │               │                   ║
+                    ║       │               ▼               │                   ║
+                    ║       │   ┌───────────────────────┐   │                   ║
+                    ║       │   │ Spring Boot API Server│   │                   ║
+                    ║       │   │ Docker Container      │   │                   ║
+                    ║       │   └─────┬──────────┬──────┘   │                   ║
+                    ║       └─────────┼──────────┼──────────┘                   ║
+                    ║                 │          │                              ║
+                    ║                 ▼          ▼                              ║
+                    ║          ┌──────────┐ ┌──────────────────┐                ║
+                    ║          │   RDS    │ │   ElastiCache    │                ║
+                    ║          │  MySQL   │ │ Valkey / Redis   │                ║
+                    ║          └──────────┘ │ 추천 세션 TTL 24h│                  ║
+                    ║                       └──────────────────┘                ║
+                    ║               ┌─────────────────┐                         ║
+                    ║               │    Amazon S3    │◀ ─ ─ Client             ║
+                    ║               │ 영수증/장소 사진   │  Presigned URL Upload   ║
+                    ║               └─────────────────┘                         ║
+                    ╚═══════════════════════════════════════════════════════════╝
+                                             │
+                          ┌──────────────────┼─────────────────┐
+                          ▼                  ▼                 ▼
+                   ┌─────────────┐    ┌─────────────┐   ┌──────────────┐
+                   │  AI Server  │    │  Kakao API  │   │ Apple Login  │
+                   │ 추천 / OCR   │    │ 주소 → 좌표  │   │ ID Token 검증 │
+                   └─────────────┘    └─────────────┘   └──────────────┘
 ```
 
 ## Project Structure

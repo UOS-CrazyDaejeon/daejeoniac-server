@@ -73,6 +73,48 @@ public class PlacePhotoController {
             @RequestParam Double accuracy,
             @RequestParam Instant measuredAt
     ) {
+        return uploadPlacePhotoInternal(authentication, placeId, image, latitude, longitude, accuracy, measuredAt);
+    }
+
+    @PatchMapping(
+            value = "{placeId}/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @Operation(summary = "실시간 장소 사진 블러처리 및 업로드 (PATCH)", description = "POST 업로드 API와 동일한 기능을 PATCH 방식으로 제공합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "장소 사진 저장 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "404", description = "데이터를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "415", description = "지원하지 않는 이미지 형식",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class)))
+    })
+    public ResponseEntity<PlacePhotoResponse> uploadPlacePhotoWithPatch(
+            Authentication authentication,
+            @PathVariable Long placeId,
+            @RequestPart("image") MultipartFile image,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Double accuracy,
+            @RequestParam Instant measuredAt
+    ) {
+        return uploadPlacePhotoInternal(authentication, placeId, image, latitude, longitude, accuracy, measuredAt);
+    }
+
+    private ResponseEntity<PlacePhotoResponse> uploadPlacePhotoInternal(
+            Authentication authentication,
+            Long placeId,
+            MultipartFile image,
+            Double latitude,
+            Double longitude,
+            Double accuracy,
+            Instant measuredAt
+    ) {
         Long memberId = Long.valueOf(authentication.getName());
         PlacePhotoUploadRequest request = new PlacePhotoUploadRequest(latitude, longitude, accuracy, measuredAt);
 

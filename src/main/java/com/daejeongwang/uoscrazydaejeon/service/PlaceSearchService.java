@@ -3,8 +3,6 @@ package com.daejeongwang.uoscrazydaejeon.service;
 import com.daejeongwang.uoscrazydaejeon.client.PlaceSearchApiClient;
 import com.daejeongwang.uoscrazydaejeon.dto.response.PlaceSearchResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.PlaceSearchApiResponse;
-import com.daejeongwang.uoscrazydaejeon.entity.Place;
-import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,107 +14,6 @@ public class PlaceSearchService {
 
     private final PlaceSearchApiClient placeSearchApiClient;
 
-    private final PlaceRepository placeRepository;
-
-    public void syncPlaces() {
-        List<String> keywords = List.of(
-                "대전 동구 관광지",
-                "대전 중구 관광지",
-                "대전 서구 관광지",
-                "대전 유성구 관광지",
-                "대전 대덕구 관광지",
-                "대전 동구 맛집",
-                "대전 중구 맛집",
-                "대전 서구 맛집",
-                "대전 유성구 맛집",
-                "대전 대덕구 맛집",
-                "대전 동구 카페",
-                "대전 중구 카페",
-                "대전 서구 카페",
-                "대전 유성구 카페",
-                "대전 대덕구 카페",
-                "대전 동구 전시",
-                "대전 중구 전시",
-                "대전 서구 전시",
-                "대전 유성구 전시",
-                "대전 대덕구 전시",
-                "대전 동구 공원",
-                "대전 중구 공원",
-                "대전 서구 공원",
-                "대전 유성구 공원",
-                "대전 대덕구 공원",
-                "대전 동구 쇼핑",
-                "대전 중구 쇼핑",
-                "대전 서구 쇼핑",
-                "대전 유성구 쇼핑",
-                "대전 대덕구 쇼핑"
-        );
-
-        keywords.forEach(keyword -> searchPlaces(keyword).forEach(this::saveIfNotExists));
-    }
-
-    private void saveIfNotExists(PlaceSearchResponse placeSearchResponse) {
-        Place place = convertToEntity(placeSearchResponse);
-
-        if(!placeRepository.existsByPlaceNameAndPlaceAddressAndCategoryLarge(place.getPlaceName(), place.getPlaceAddress(), place.getCategoryLarge()))
-            placeRepository.save(place);
-    }
-
-    private Place convertToEntity(PlaceSearchResponse placeSearchResponse) {
-
-        // TODO : tag, placeDescription은 일단 null 처리, 추후 수정 필요
-        return Place.builder()
-                .placeName(placeSearchResponse.getName())
-                .tag(null)
-                .placeDescription(null)
-                .placeAddress(placeSearchResponse.getAddress())
-                .latitude(placeSearchResponse.getLatitude())
-                .longitude(placeSearchResponse.getLongitude())
-                .gu(extractGu(placeSearchResponse.getAddress()))
-                .dong(extractDong(placeSearchResponse.getAddress()))
-                .categoryLarge(extractCategory(placeSearchResponse.getCategory(), 0))
-                .categoryMedium(extractCategory(placeSearchResponse.getCategory(), 1))
-                .categorySmall(extractCategory(placeSearchResponse.getCategory(), 2))
-                .build();
-    }
-
-    private String extractGu(String address) {
-        if(address == null || address.isBlank())
-            return null;
-
-        for(String part : address.split("\\s+"))
-            if (part.endsWith("구"))
-                return part;
-
-        return null;
-    }
-
-    private String extractDong(String address) {
-        if(address == null || address.isBlank())
-            return null;
-
-        for(String part : address.split("\\s+"))
-            if (part.endsWith("동"))
-                return part;
-
-        return null;
-    }
-
-    // 카테고리 나누기
-    private String extractCategory(String category, int index) {
-        if(category == null || category.isBlank())
-            return null;
-
-        String[] parts = category.split(">");
-
-        if(parts.length <= index)
-            return null;
-
-        return parts[index].trim();
-    }
-
-
-    // 밑부터 장소 search 기능
     public List<PlaceSearchResponse> searchPlaces(String keyword) {
         PlaceSearchApiResponse response = placeSearchApiClient.searchByKeyword(keyword, 1, 15);
 

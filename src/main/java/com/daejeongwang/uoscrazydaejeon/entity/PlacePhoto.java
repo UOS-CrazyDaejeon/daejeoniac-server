@@ -32,4 +32,8 @@ public class PlacePhoto {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
+
+    public void updateObjectKey(String objectKey) {
+        this.objectKey = objectKey;
+    }
 }

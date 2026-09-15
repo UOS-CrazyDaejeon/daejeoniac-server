@@ -77,12 +77,12 @@ public class PlacePhotoController {
     }
 
     @PatchMapping(
-            value = "{placeId}/upload",
+            value = "{placePhotoId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @Operation(summary = "실시간 장소 사진 블러처리 및 업로드 (PATCH)", description = "POST 업로드 API와 동일한 기능을 PATCH 방식으로 제공합니다.")
+    @Operation(summary = "실시간 장소 사진 변경", description = "기존 장소 사진을 새 이미지로 변경합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "장소 사진 저장 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "200", description = "장소 사진 변경 성공", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(schema = @Schema(implementation = ResultDto.class))),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
@@ -96,14 +96,18 @@ public class PlacePhotoController {
     })
     public ResponseEntity<PlacePhotoResponse> uploadPlacePhotoWithPatch(
             Authentication authentication,
-            @PathVariable Long placeId,
+            @PathVariable Long placePhotoId,
             @RequestPart("image") MultipartFile image
             // GPS 위치 인증 재활성화 시 아래 DTO 요청을 복구
             // , @Valid @ModelAttribute PlacePhotoUploadRequest request
     ) {
-        // GPS 위치 인증 재활성화 시 기존 호출을 복구
-        // return uploadPlacePhotoInternal(authentication, placeId, image, request);
-        return uploadPlacePhotoInternal(authentication, placeId, image);
+        Long memberId = Long.valueOf(authentication.getName());
+
+        // GPS 위치 인증 재활성화 시 기존 서비스 호출에 request 인자를 복구
+        // PlacePhotoResponse response = placePhotoService.updatePlacePhoto(memberId, placePhotoId, image, request);
+        PlacePhotoResponse response = placePhotoService.updatePlacePhoto(memberId, placePhotoId, image);
+
+        return ResponseEntity.ok(response);
     }
 
     private ResponseEntity<PlacePhotoResponse> uploadPlacePhotoInternal(

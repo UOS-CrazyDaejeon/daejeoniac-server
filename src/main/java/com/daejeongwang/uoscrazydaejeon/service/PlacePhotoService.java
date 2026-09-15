@@ -99,6 +99,65 @@ public class PlacePhotoService {
         }
     }
 
+    // GPS 위치 인증 재활성화 시 기존 요청 DTO를 포함한 메서드 시그니처를 복구
+    // public PlacePhotoResponse updatePlacePhoto(Long memberId, Long placePhotoId, MultipartFile image, PlacePhotoUploadRequest request) {
+    public PlacePhotoResponse updatePlacePhoto(Long memberId, Long placePhotoId, MultipartFile image) {
+        PlacePhoto placePhoto = placePhotoRepository.findByIdAndMember_Id(placePhotoId, memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("장소 사진이 없거나 본인이 등록한 사진이 아닙니다."));
+
+        // GPS 위치 인증 비활성화: 모든 회원이 위치 검증을 통과한다.
+        // placeProximityVerifier.verifyNearPlace(
+        //         placePhoto.getPlace(),
+        //         request.getLatitude(),
+        //         request.getLongitude(),
+        //         request.getAccuracy(),
+        //         request.getMeasuredAt()
+        // );
+
+        String contentType = image.getContentType();
+        if (!List.of("image/jpeg", "image/png").contains(contentType)) {
+            throw new UnsupportedMediaTypeException(
+                    "지원하지 않는 이미지 형식입니다."
+            );
+        }
+
+        byte[] mosaicImage = aiServerClient.requestFaceMosaic(image);
+
+        UUID photoUuid = UUID.randomUUID();
+        String objectKey = "place-photos/" + photoUuid + ".jpg";
+        String oldObjectKey = placePhoto.getObjectKey();
+
+        s3Service.uploadImage(objectKey, mosaicImage, "image/jpeg");
+
+        PlacePhoto savedPlacePhoto;
+        try {
+            placePhoto.updateObjectKey(objectKey);
+            savedPlacePhoto = placePhotoRepository.save(placePhoto);
+        } catch (Exception e) {
+            try {
+                s3Service.deleteObject(objectKey);
+            } catch (Exception deleteException) {
+                log.error("S3 보상 삭제 실패. objectKey={}", objectKey, deleteException);
+            }
+
+            throw e;
+        }
+
+        try {
+            s3Service.deleteObject(oldObjectKey);
+        } catch (Exception deleteException) {
+            log.error("기존 S3 장소 사진 삭제 실패. objectKey={}", oldObjectKey, deleteException);
+        }
+
+        return PlacePhotoResponse.builder()
+                .placePhotoId(savedPlacePhoto.getId())
+                .placeId(savedPlacePhoto.getPlace().getId())
+                .placeName(savedPlacePhoto.getPlace().getPlaceName())
+                .imageUrl(s3Service.createPublicUrl(objectKey))
+                .createdAt(savedPlacePhoto.getCreatedAt())
+                .build();
+    }
+
     public List<PlacePhotoByPlaceResponse> getPlacePhotosByPlace(
             Long memberId,
             Long placeId,

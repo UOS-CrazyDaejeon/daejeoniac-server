@@ -54,15 +54,12 @@ public class VisitVerificationController {
     })
     public ResponseEntity<VisitVerificationResponse> verifyVisit(
             Authentication authentication,
-            @PathVariable("placeId") Long placeId
-            // GPS 위치 인증 재활성화 시 복구
-            // , @Valid @RequestBody VisitVerificationRequest request
+            @PathVariable("placeId") Long placeId,
+            @Valid @RequestBody VisitVerificationRequest request
     ) {
         Long memberId = Long.valueOf(authentication.getName());
 
-        // GPS 위치 인증 재활성화 시 기존 서비스 호출을 복구
-        // VisitVerificationResponse response = visitVerificationService.verifyVisit(memberId, placeId, request);
-        VisitVerificationResponse response = visitVerificationService.verifyVisit(memberId, placeId);
+        VisitVerificationResponse response = visitVerificationService.verifyVisit(memberId, placeId, request);
 
         return ResponseEntity.ok(response);
     }

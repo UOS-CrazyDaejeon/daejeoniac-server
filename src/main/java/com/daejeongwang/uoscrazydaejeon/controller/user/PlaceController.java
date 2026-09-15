@@ -26,6 +26,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Place", description = "장소 조회 API")
 public class PlaceController {
+    private static final long LOCATION_BYPASS_MEMBER_ID_1 = 3L;
+    private static final long LOCATION_BYPASS_MEMBER_ID_2 = 6L;
+    private static final double FIXED_LATITUDE = 36.3504;
+    private static final double FIXED_LONGITUDE = 127.3848;
 
     private final PlaceService placeService;
     private final PlaceClickLogService placeClickLogService;
@@ -145,7 +149,7 @@ public class PlaceController {
     @GetMapping("/top-visitors")
     @Operation(
             summary = "내 주변 인기 장소 조회",
-            description = "고정 좌표 기준 1km 이내 장소 중 각 장소의 최신 방문자 수를 기준으로 상위 5개를 조회합니다."
+            description = "현재 좌표 기준 1km 이내 장소 중 각 장소의 최신 방문자 수를 기준으로 상위 5개를 조회합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "주변 인기 장소 조회 성공", useReturnTypeSchema = true),
@@ -160,14 +164,17 @@ public class PlaceController {
                             examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
                     ))
     })
-    // 클라이언트 좌표를 받던 기존 메서드 시그니처
-    // public ResponseEntity<List<PlaceResponse>> getTopKPlacesByVisitors(
-    //         @RequestParam(defaultValue = "36.3504") double latitude,
-    //         @RequestParam(defaultValue = "127.3845") double longitude
-    // ) {
-    public ResponseEntity<List<PlaceResponse>> getTopKPlacesByVisitors() {
-        double latitude = 36.3504;
-        double longitude = 127.3848;
+    public ResponseEntity<List<PlaceResponse>> getTopKPlacesByVisitors(
+            Authentication authentication,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude
+    ) {
+        Long memberId = Long.valueOf(authentication.getName());
+        if (memberId == LOCATION_BYPASS_MEMBER_ID_1
+                || memberId == LOCATION_BYPASS_MEMBER_ID_2) {
+            latitude = FIXED_LATITUDE;
+            longitude = FIXED_LONGITUDE;
+        }
 
         return ResponseEntity.ok(
                 placeService.getTopKPlacesByVisitors(latitude, longitude)

@@ -23,9 +23,8 @@ import java.time.ZoneId;
 @Service
 @RequiredArgsConstructor
 public class VisitVerificationService {
-    // GPS 위치 인증 비활성화 전에는 3번, 6번 회원만 검증을 우회했다.
-    // private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
-    // private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
+    private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
+    private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
 
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final PlaceRepository placeRepository;
@@ -34,26 +33,26 @@ public class VisitVerificationService {
     private final Clock clock;
 
     @Transactional
-    // GPS 위치 인증 재활성화 시 기존 메서드 시그니처를 복구
-    // public VisitVerificationResponse verifyVisit(Long memberId, Long placeId, VisitVerificationRequest request) {
-    public VisitVerificationResponse verifyVisit(Long memberId, Long placeId) {
+    public VisitVerificationResponse verifyVisit(Long memberId, Long placeId, VisitVerificationRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원이 없습니다."));
 
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new ResourceNotFoundException("장소가 없습니다."));
 
-        // GPS 위치 인증 비활성화: 모든 회원이 위치 검증을 통과한다.
-        // if (member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_1
-        //         && member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_2) {
-        //     placeProximityVerifier.verifyNearPlace(
-        //             place,
-        //             request.getLatitude(),
-        //             request.getLongitude(),
-        //             request.getAccuracy(),
-        //             request.getMeasuredAt()
-        //     );
-        // }
+        if (member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_1
+                && member.getId() != GPS_VERIFICATION_BYPASS_MEMBER_ID_2) {
+            if (request == null) {
+                throw new IllegalArgumentException("위치정보가 필요합니다.");
+            }
+            placeProximityVerifier.verifyNearPlace(
+                    place,
+                    request.getLatitude(),
+                    request.getLongitude(),
+                    request.getAccuracy(),
+                    request.getMeasuredAt()
+            );
+        }
 
         Instant now = clock.instant();
         ZoneId seoul = ZoneId.of("Asia/Seoul");

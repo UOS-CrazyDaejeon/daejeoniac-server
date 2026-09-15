@@ -35,9 +35,8 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 public class ReceiptService {
-    // 영수증 위치 인증 비활성화 전에는 3번, 6번 회원만 전체 검증을 우회했다.
-    // private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
-    // private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
+    private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
+    private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
 
     private final ReceiptRepository receiptRepository;
     private final VisitedPlaceRepository visitedPlaceRepository;
@@ -207,22 +206,21 @@ public class ReceiptService {
             throw new IllegalArgumentException("올바르지 않은 OCR 상태입니다.");
         }
 
-        // 3번, 6번 회원만 영수증 인증 전체를 우회하던 기존 로직
-        // Long memberId = receipt.getVisitedPlace().getMember().getId();
-        // if (memberId == RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_1
-        //         || memberId == RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_2) {
-        //     Instant paidAt = result.getOcrPaidAt() == null
-        //             ? null
-        //             : result.getOcrPaidAt().atZone(SEOUL).toInstant();
-        //     receipt.ocrSuccess(
-        //             result.getOcrPlaceName(),
-        //             result.getOcrPlaceAddress(),
-        //             paidAt,
-        //             true,
-        //             clock.instant()
-        //     );
-        //     return;
-        // }
+        Long memberId = receipt.getVisitedPlace().getMember().getId();
+        if (memberId == RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_1
+                || memberId == RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_2) {
+            Instant paidAt = result.getOcrPaidAt() == null
+                    ? null
+                    : result.getOcrPaidAt().atZone(SEOUL).toInstant();
+            receipt.ocrSuccess(
+                    result.getOcrPlaceName(),
+                    result.getOcrPlaceAddress(),
+                    paidAt,
+                    true,
+                    clock.instant()
+            );
+            return;
+        }
 
         if (result.getOcrPlaceName() == null || result.getOcrPlaceName().isBlank()
                 || result.getOcrPlaceAddress() == null || result.getOcrPlaceAddress().isBlank()
@@ -232,29 +230,26 @@ public class ReceiptService {
             );
         }
 
-        // 영수증 주소 기반 위치 인증 비활성화: 모든 회원이 위치 검증을 통과한다.
-        // Place place = receipt.getVisitedPlace().getPlace();
-        //
-        // AddressApiResponse addressResponse = addressApiClient.searchCoordinateByAddress(result.getOcrPlaceAddress());
-        //
-        // boolean placeMatched = false;
-        // if(addressResponse != null && addressResponse.getDocuments() != null && !addressResponse.getDocuments().isEmpty()){
-        //     AddressApiResponse.Document document = addressResponse.getDocuments().get(0);
-        //     double receiptLongitude = Double.parseDouble(document.getLongitude());
-        //     double receiptLatitude = Double.parseDouble(document.getLatitude());
-        //
-        //     double distance = distanceCalculator.calculateMeters(
-        //             place.getLatitude(),
-        //             place.getLongitude(),
-        //             receiptLatitude,
-        //             receiptLongitude
-        //     );
-        //
-        //     placeMatched = distance <= 100;
-        // }
-        boolean placeMatched = true;
+        Place place = receipt.getVisitedPlace().getPlace();
 
-        // OCR returns the local wall-clock time printed on a Korean receipt.
+        AddressApiResponse addressResponse = addressApiClient.searchCoordinateByAddress(result.getOcrPlaceAddress());
+
+        boolean placeMatched = false;
+        if(addressResponse != null && addressResponse.getDocuments() != null && !addressResponse.getDocuments().isEmpty()){
+            AddressApiResponse.Document document = addressResponse.getDocuments().get(0);
+            double receiptLongitude = Double.parseDouble(document.getLongitude());
+            double receiptLatitude = Double.parseDouble(document.getLatitude());
+
+            double distance = distanceCalculator.calculateMeters(
+                    place.getLatitude(),
+                    place.getLongitude(),
+                    receiptLatitude,
+                    receiptLongitude
+            );
+
+            placeMatched = distance <= 100;
+        }
+
         Instant paidAt = result.getOcrPaidAt().atZone(SEOUL).toInstant();
         boolean paidOnVisitedDate = paidAt.atZone(SEOUL).toLocalDate()
                 .isEqual(receipt.getVisitedPlace().getVisitedDate());

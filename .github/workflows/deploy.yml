@@ -63,8 +63,9 @@ jobs:
               "docker pull '"$ECR_REGISTRY"'/'"${{ env.ECR_REPOSITORY }}"':'"$IMAGE_TAG"'",
               "docker rm -f daejeoniac-server || true",
               "docker run -d --name daejeoniac-server --restart unless-stopped -p 8080:8080 --env-file /home/ec2-user/docker.env -v /home/ec2-user/AuthKey_R9DSXF952W.p8:/app/apple/apple-auth-key.p8:ro '"$ECR_REGISTRY"'/'"${{ env.ECR_REPOSITORY }}"':'"$IMAGE_TAG"' --spring.profiles.active=prod",
-              "sleep 30",
+              "sleep 20",
               "docker inspect -f '\''{{.State.Running}}'\'' daejeoniac-server | grep true"
+              "docker image prune -af"
             ]' \
             --query "Command.CommandId" \
             --output text)

@@ -67,13 +67,13 @@ public class PlacePhotoController {
     public ResponseEntity<PlacePhotoResponse> uploadPlacePhoto(
             Authentication authentication,
             @PathVariable Long placeId,
-            @RequestPart("image") MultipartFile image,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
-            @RequestParam Double accuracy,
-            @RequestParam Instant measuredAt
+            @RequestPart("image") MultipartFile image
+            // GPS 위치 인증 재활성화 시 아래 DTO 요청을 복구
+            // , @Valid @ModelAttribute PlacePhotoUploadRequest request
     ) {
-        return uploadPlacePhotoInternal(authentication, placeId, image, latitude, longitude, accuracy, measuredAt);
+        // GPS 위치 인증 재활성화 시 기존 호출을 복구
+        // return uploadPlacePhotoInternal(authentication, placeId, image, request);
+        return uploadPlacePhotoInternal(authentication, placeId, image);
     }
 
     @PatchMapping(
@@ -97,28 +97,29 @@ public class PlacePhotoController {
     public ResponseEntity<PlacePhotoResponse> uploadPlacePhotoWithPatch(
             Authentication authentication,
             @PathVariable Long placeId,
-            @RequestPart("image") MultipartFile image,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
-            @RequestParam Double accuracy,
-            @RequestParam Instant measuredAt
+            @RequestPart("image") MultipartFile image
+            // GPS 위치 인증 재활성화 시 아래 DTO 요청을 복구
+            // , @Valid @ModelAttribute PlacePhotoUploadRequest request
     ) {
-        return uploadPlacePhotoInternal(authentication, placeId, image, latitude, longitude, accuracy, measuredAt);
+        // GPS 위치 인증 재활성화 시 기존 호출을 복구
+        // return uploadPlacePhotoInternal(authentication, placeId, image, request);
+        return uploadPlacePhotoInternal(authentication, placeId, image);
     }
 
     private ResponseEntity<PlacePhotoResponse> uploadPlacePhotoInternal(
             Authentication authentication,
             Long placeId,
-            MultipartFile image,
-            Double latitude,
-            Double longitude,
-            Double accuracy,
-            Instant measuredAt
+            MultipartFile image
+            // GPS 위치 인증 재활성화 시 PlacePhotoUploadRequest request 인자를 복구
+            // , PlacePhotoUploadRequest request
     ) {
         Long memberId = Long.valueOf(authentication.getName());
-        PlacePhotoUploadRequest request = new PlacePhotoUploadRequest(latitude, longitude, accuracy, measuredAt);
+        // 개별 GPS 요청 파라미터를 사용하던 기존 DTO 생성 코드
+        // PlacePhotoUploadRequest request = new PlacePhotoUploadRequest(latitude, longitude, accuracy, measuredAt);
 
-        PlacePhotoResponse response = placePhotoService.uploadPlacePhoto(memberId, placeId, image, request);
+        // GPS 위치 인증 재활성화 시 기존 서비스 호출을 복구
+        // PlacePhotoResponse response = placePhotoService.uploadPlacePhoto(memberId, placeId, image, request);
+        PlacePhotoResponse response = placePhotoService.uploadPlacePhoto(memberId, placeId, image);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -108,7 +108,7 @@ public class VisitedPlaceService {
 
         boolean hasValidPendingReceipt = receipts.stream()
                 .anyMatch(receipt -> receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
-                                && receipt.getCreatedAt()
+                                && receipt.getRequestedAt()
                                 .plus(PENDING_VALID_DURATION)
                                 .isAfter(now)
                 );

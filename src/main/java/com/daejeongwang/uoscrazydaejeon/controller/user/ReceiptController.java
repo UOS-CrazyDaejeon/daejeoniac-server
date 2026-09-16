@@ -72,6 +72,29 @@ public class ReceiptController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PatchMapping("/{receiptId}/upload-url")
+    @Operation(
+            summary = "영수증 재업로드 URL 발급",
+            description = "인증이 거절된 영수증에 대해 동일한 영수증 ID와 객체 키로 새 업로드 URL을 발급합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "영수증 재업로드 URL 발급 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "404", description = "영수증을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class))),
+            @ApiResponse(responseCode = "409", description = "재인증할 수 없는 영수증 상태",
+                    content = @Content(schema = @Schema(implementation = ResultDto.class)))
+    })
+    public ResponseEntity<ReceiptUploadUrlResponse> reissueUploadUrl(
+            Authentication authentication,
+            @PathVariable Long receiptId
+    ) {
+        Long memberId = Long.valueOf(authentication.getName());
+        ReceiptUploadUrlResponse response = receiptService.reissueUploadUrl(memberId, receiptId);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{receiptId}/status")
     @Operation(summary = "영수증 상태 조회", description = "현재 로그인 된 사용자의 영수증 인증 상태를 조회합니다.")
     @ApiResponses({

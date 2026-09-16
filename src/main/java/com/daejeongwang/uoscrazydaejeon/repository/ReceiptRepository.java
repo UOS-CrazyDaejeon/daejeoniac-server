@@ -22,7 +22,7 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
             VisitedPlace visitedPlace,
             Receipt.ReceiptStatus verifyStatus
     );
-    Optional<Receipt> findFirstByVisitedPlaceAndVerifyStatusOrderByCreatedAtDesc(
+    Optional<Receipt> findFirstByVisitedPlaceAndVerifyStatusOrderByRequestedAtDesc(
             VisitedPlace visitedPlace,
             Receipt.ReceiptStatus verifyStatus
     );
@@ -36,7 +36,7 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 
     Optional<Receipt> findByVisitedPlace_IdAndVisitedPlace_Member_Id(Long visitedPlaceId, Long memberId);
 
-    Page<Receipt> findAllByVisitedPlace_Member_IdAndVerifyStatusOrderByCreatedAtDesc(
+    Page<Receipt> findAllByVisitedPlace_Member_IdAndVerifyStatusOrderByRequestedAtDesc(
             Long memberId,
             Receipt.ReceiptStatus verifyStatus,
             Pageable pageable

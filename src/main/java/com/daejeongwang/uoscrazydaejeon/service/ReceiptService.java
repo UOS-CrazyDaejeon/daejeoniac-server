@@ -84,12 +84,41 @@ public class ReceiptService {
                 .visitedPlace(visitedPlace)
                 .receiptUuid(receiptUuid)
                 .objectKey(objectKey)
+                .requestedAt(clock.instant())
                 .build();
 
         Receipt savedReceipt = receiptRepository.save(receipt);
 
         return ReceiptUploadUrlResponse.builder()
                 .receiptId(savedReceipt.getId())
+                .uploadUrl(uploadUrl)
+                .expiresIn(300)
+                .build();
+    }
+
+    @Transactional
+    public ReceiptUploadUrlResponse reissueUploadUrl(Long memberId, Long receiptId) {
+        Receipt receipt = receiptRepository.findByIdAndVisitedPlace_Member_Id(receiptId, memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("영수증을 찾을 수 없습니다."));
+
+        if (receipt.getVerifyStatus() != Receipt.ReceiptStatus.REJECTED) {
+            throw new ConflictException("거절된 영수증만 재인증할 수 있습니다.");
+        }
+
+        boolean visitIsToday = receipt.getVisitedPlace().getVisitedDate()
+                .equals(LocalDate.now(clock.withZone(SEOUL)));
+        if (!visitIsToday) {
+            throw new ConflictException("방문 인증 당일에만 영수증을 재인증할 수 있습니다.");
+        }
+
+        String uploadUrl = s3Service.createUploadUrl(
+                receipt.getObjectKey(),
+                contentTypeFromObjectKey(receipt.getObjectKey())
+        );
+        receipt.prepareForRetry(clock.instant());
+
+        return ReceiptUploadUrlResponse.builder()
+                .receiptId(receipt.getId())
                 .uploadUrl(uploadUrl)
                 .expiresIn(300)
                 .build();
@@ -124,7 +153,7 @@ public class ReceiptService {
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return receiptRepository.findAllByVisitedPlace_Member_IdAndVerifyStatusOrderByCreatedAtDesc(
+        return receiptRepository.findAllByVisitedPlace_Member_IdAndVerifyStatusOrderByRequestedAtDesc(
                         memberId,
                         verifyStatus,
                         pageable
@@ -261,12 +290,12 @@ public class ReceiptService {
     private boolean isExpired(Receipt receipt) {
         return receipt.getVerifyStatus() == Receipt.ReceiptStatus.PENDING
                 && receipt.getOcrStatus() == Receipt.OcrStatus.PENDING
-                && !receipt.getCreatedAt().plus(PENDING_VALID_DURATION).isAfter(clock.instant());
+                && !receipt.getRequestedAt().plus(PENDING_VALID_DURATION).isAfter(clock.instant());
     }
 
     private void expirePendingReceipt(VisitedPlace visitedPlace) {
         Receipt pendingReceipt = receiptRepository
-                .findFirstByVisitedPlaceAndVerifyStatusOrderByCreatedAtDesc(
+                .findFirstByVisitedPlaceAndVerifyStatusOrderByRequestedAtDesc(
                         visitedPlace,
                         Receipt.ReceiptStatus.PENDING
                 )
@@ -280,6 +309,16 @@ public class ReceiptService {
         }
 
         throw new ConflictException("처리 중인 영수증이 있습니다.");
+    }
+
+    private String contentTypeFromObjectKey(String objectKey) {
+        if (objectKey.endsWith(".jpg") || objectKey.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (objectKey.endsWith(".png")) {
+            return "image/png";
+        }
+        throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
     }
 
 }

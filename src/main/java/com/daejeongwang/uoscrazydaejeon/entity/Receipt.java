@@ -2,8 +2,6 @@ package com.daejeongwang.uoscrazydaejeon.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -42,9 +40,8 @@ public class Receipt {
     @Column(nullable = false)
     private String objectKey;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "requested_at", nullable = false)
+    private Instant requestedAt;
 
     private Instant verifiedAt;
 
@@ -88,6 +85,20 @@ public class Receipt {
     public void expire(Instant now) {
         this.verifyStatus = ReceiptStatus.EXPIRED;
         this.verifiedAt = now;
+    }
+
+    public void prepareForRetry(Instant now) {
+        if (this.verifyStatus != ReceiptStatus.REJECTED) {
+            throw new IllegalStateException("거절된 영수증만 재인증할 수 있습니다.");
+        }
+
+        this.requestedAt = now;
+        this.verifyStatus = ReceiptStatus.PENDING;
+        this.ocrStatus = OcrStatus.PENDING;
+        this.ocrPlaceName = null;
+        this.ocrPlaceAddress = null;
+        this.ocrPaidAt = null;
+        this.verifiedAt = null;
     }
 
 }

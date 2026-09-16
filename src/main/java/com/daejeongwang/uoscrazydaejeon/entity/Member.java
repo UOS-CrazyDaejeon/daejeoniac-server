@@ -36,6 +36,10 @@ public class Member {
 
     private Integer point;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean locationTermsAgreed = false;
+
     public void addPoint(Integer point) {
         if(this.point == null)
             this.point = 0;
@@ -57,11 +61,20 @@ public class Member {
                 .memberName(memberName)
                 .nickname(nickname)
                 .point(0)
+                .locationTermsAgreed(false)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
     public void updateProfile(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void agreeToLocationTerms() {
+        this.locationTermsAgreed = true;
+    }
+
+    public void withdrawLocationTermsAgreement() {
+        this.locationTermsAgreed = false;
     }
 }

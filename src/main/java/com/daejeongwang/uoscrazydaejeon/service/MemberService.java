@@ -43,6 +43,7 @@ public class MemberService {
                 .memberName(member.getMemberName())
                 .nickname(member.getNickname())
                 .point(member.getPoint())
+                .locationTermsAgreed(member.isLocationTermsAgreed())
                 .build();
     }
 
@@ -75,6 +76,39 @@ public class MemberService {
                 .memberName(member.getMemberName())
                 .nickname(member.getNickname())
                 .point(member.getPoint())
+                .locationTermsAgreed(member.isLocationTermsAgreed())
+                .build();
+    }
+
+    @Transactional
+    public MemberResponse agreeToLocationTerms(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
+
+        member.agreeToLocationTerms();
+
+        return MemberResponse.builder()
+                .memberId(member.getId())
+                .memberName(member.getMemberName())
+                .nickname(member.getNickname())
+                .point(member.getPoint())
+                .locationTermsAgreed(member.isLocationTermsAgreed())
+                .build();
+    }
+
+    @Transactional
+    public MemberResponse withdrawLocationTermsAgreement(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
+
+        member.withdrawLocationTermsAgreement();
+
+        return MemberResponse.builder()
+                .memberId(member.getId())
+                .memberName(member.getMemberName())
+                .nickname(member.getNickname())
+                .point(member.getPoint())
+                .locationTermsAgreed(member.isLocationTermsAgreed())
                 .build();
     }
 

@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -106,6 +107,62 @@ public class MemberController {
         Long memberId = Long.valueOf(authentication.getName());
 
         MemberResponse response = memberService.updateMember(memberId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/me/location-terms/agree")
+    @Operation(summary = "위치기반서비스 이용약관 동의", description = "현재 로그인 된 사용자의 위치기반서비스 이용약관 동의 상태를 true로 변경합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "위치기반서비스 이용약관 동의 처리 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.UNAUTHORIZED)
+                    )),
+            @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.NOT_FOUND)
+                    )),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
+                    ))
+    })
+    public ResponseEntity<MemberResponse> agreeToLocationTerms(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
+        MemberResponse response = memberService.agreeToLocationTerms(memberId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/me/location-terms/agree")
+    @Operation(summary = "위치기반서비스 이용약관 동의 철회", description = "현재 로그인 된 사용자의 위치기반서비스 이용약관 동의 상태를 false로 변경합니다. 회원 계정은 삭제되지 않습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "위치기반서비스 이용약관 동의 철회 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.UNAUTHORIZED)
+                    )),
+            @ApiResponse(responseCode = "404", description = "회원을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.NOT_FOUND)
+                    )),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(
+                            schema = @Schema(implementation = ResultDto.class),
+                            examples = @ExampleObject(value = SwaggerExamples.INTERNAL_SERVER_ERROR)
+                    ))
+    })
+    public ResponseEntity<MemberResponse> withdrawLocationTermsAgreement(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getName());
+
+        MemberResponse response = memberService.withdrawLocationTermsAgreement(memberId);
 
         return ResponseEntity.ok(response);
     }

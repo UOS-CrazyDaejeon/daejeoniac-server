@@ -7,7 +7,9 @@ import com.daejeongwang.uoscrazydaejeon.dto.request.SimilarRecommendationRequest
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiNextPlacesRecommendationResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiSimilarRecommendationResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.ReceiptOcrResultResponse;
+import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,11 +56,58 @@ public class AiServerClient {
         ReceiptOcrRequest request =
                 new ReceiptOcrRequest(receiptUuid, objectKey);
 
-        return restTemplate.postForObject(
-                aiServerUrl + "/api/v1/ocr",
-                request,
-                ReceiptOcrResultResponse.class
-        );
+        try {
+            return restTemplate.postForObject(
+                    aiServerUrl + "/api/v1/ocr",
+                    request,
+                    ReceiptOcrResultResponse.class
+            );
+        } catch (RestClientException e) {
+            logOcrError(e);
+            return requestOcrGpt(receiptUuid, objectKey);
+        }
+    }
+
+    public ReceiptOcrResultResponse requestOcrGpt(UUID receiptUuid, String objectKey) {
+
+        ReceiptOcrRequest request =
+                new ReceiptOcrRequest(receiptUuid, objectKey);
+
+        try {
+            return restTemplate.postForObject(
+                    aiServerUrl + "/api/v1/ocr-gpt",
+                    request,
+                    ReceiptOcrResultResponse.class
+            );
+        } catch (RestClientException e) {
+            logOcrError(e);
+            return failedOcrResult(receiptUuid);
+        }
+    }
+
+    private void logOcrError(RestClientException exception) {
+        log.error("{}", extractOcrErrorMessage(exception));
+    }
+
+    String extractOcrErrorMessage(RestClientException exception) {
+        if (exception instanceof RestClientResponseException responseException) {
+            try {
+                JsonNode root = objectMapper.readTree(responseException.getResponseBodyAsString());
+                String message = root.path("error").path("message").asText();
+                if (!message.isBlank()) {
+                    return message;
+                }
+            } catch (JsonProcessingException ignored) {}
+        }
+
+        return exception.getMessage();
+    }
+
+    ReceiptOcrResultResponse failedOcrResult(UUID receiptUuid) {
+        return ReceiptOcrResultResponse.builder()
+                .receiptUuid(receiptUuid)
+                .ocrStatus(Receipt.OcrStatus.FAILED)
+                .build();
     }
 
     public AiSimilarRecommendationResponse requestSimilarRecommendations(SimilarRecommendationRequest request) {

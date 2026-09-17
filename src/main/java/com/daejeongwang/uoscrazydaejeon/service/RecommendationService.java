@@ -31,7 +31,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RecommendationService {
 
-    private static final double RADIUS = 1000.0;
+    private static final double RADIUS = 1500.0;
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private final PlaceRepository placeRepository;

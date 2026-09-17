@@ -91,10 +91,11 @@ public class VisitedPlaceService {
 
     private int receiptAvailabilityPriority(VisitedPlaceListResponse.ReceiptAvailability availability) {
         return switch (availability) {
-            case APPROVED -> 0;
-            case PROCESSING -> 1;
-            case AVAILABLE -> 2;
-            case UNAVAILABLE -> 3;
+            case PASSED -> 0;
+            case APPROVED -> 1;
+            case PROCESSING -> 2;
+            case AVAILABLE -> 3;
+            case UNAVAILABLE -> 4;
         };
     }
 
@@ -110,6 +111,12 @@ public class VisitedPlaceService {
         boolean hasUnusedApprovedReceipt = approvedReceipts.stream()
                 .anyMatch(receipt -> !usedReceiptIds.contains(receipt.getId()));
         if (hasUnusedApprovedReceipt) {
+            boolean hasUnusedVisitReceipt = approvedReceipts.stream()
+                    .anyMatch(receipt -> receipt.getVerificationType() == Receipt.VerificationType.VISIT
+                            && !usedReceiptIds.contains(receipt.getId()));
+            if (hasUnusedVisitReceipt) {
+                return VisitedPlaceListResponse.ReceiptAvailability.PASSED;
+            }
             return VisitedPlaceListResponse.ReceiptAvailability.APPROVED;
         }
         if (!approvedReceipts.isEmpty()) {

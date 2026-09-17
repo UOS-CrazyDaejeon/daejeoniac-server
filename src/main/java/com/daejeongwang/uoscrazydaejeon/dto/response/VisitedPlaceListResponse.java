@@ -18,6 +18,7 @@ public class VisitedPlaceListResponse {
         AVAILABLE,
         PROCESSING,
         APPROVED,
+        PASSED,
         UNAVAILABLE
     }
 }

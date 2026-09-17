@@ -30,7 +30,8 @@ public class TourismDataScheduler {
         log.info("Finish scheduled tourism data sync");
     }
 
-    @Scheduled(cron = "0 30 4 * * *", zone = "Asia/Seoul")
+    // LLM 호출 비용으로 인해 자동 실행 중지. 필요할 때 관리자 API로 수동 실행한다.
+    // @Scheduled(cron = "0 30 4 * * *", zone = "Asia/Seoul")
     public void generateTourismForecastDataDaily() {
         log.info("Start scheduled tourism forecast data generation");
 

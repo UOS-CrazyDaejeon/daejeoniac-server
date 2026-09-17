@@ -19,6 +19,7 @@ import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.util.DistanceCalculator;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ReceiptService {
     private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
     private static final long RECEIPT_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
@@ -187,18 +189,23 @@ public class ReceiptService {
             throw new ConflictException("영수증 이미지 업로드가 완료되지 않았습니다.");
         }
 
-        ReceiptOcrResultResponse result = aiServerClient.requestOcr(
-                receipt.getReceiptUuid(),
-                receipt.getObjectKey()
-        );
-        if (result == null) {
-            throw new IllegalStateException("AI 서버에서 OCR 결과를 반환하지 않았습니다.");
-        }
-        if (!receipt.getReceiptUuid().equals(result.getReceiptUuid())) {
-            throw new IllegalStateException("OCR 결과의 영수증 UUID가 일치하지 않습니다.");
-        }
+        try {
+            ReceiptOcrResultResponse result = aiServerClient.requestOcr(
+                    receipt.getReceiptUuid(),
+                    receipt.getObjectKey()
+            );
+            if (result == null) {
+                throw new IllegalStateException("AI 서버에서 OCR 결과를 반환하지 않았습니다.");
+            }
+            if (!receipt.getReceiptUuid().equals(result.getReceiptUuid())) {
+                throw new IllegalStateException("OCR 결과의 영수증 UUID가 일치하지 않습니다.");
+            }
 
-        applyOcrResult(receipt, result);
+            applyOcrResult(receipt, result);
+        } catch (RuntimeException e) {
+            log.error("Receipt OCR request failed. receiptId={}", receipt.getId(), e);
+            receipt.ocrFailure(clock.instant());
+        }
 
         return ReceiptStatusResponse.builder()
                 .receiptId(receipt.getId())
@@ -221,10 +228,6 @@ public class ReceiptService {
             return;
         }
 
-        if (isExpired(receipt)) {
-            receipt.expire(clock.instant());
-            return;
-        }
         if(receipt.getOcrStatus() != Receipt.OcrStatus.PENDING) { return; }
 
         if (result.getOcrStatus() == Receipt.OcrStatus.PENDING) {

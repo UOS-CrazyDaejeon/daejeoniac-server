@@ -13,7 +13,6 @@ import com.daejeongwang.uoscrazydaejeon.repository.PlacePhotoRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RefreshTokenRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RewardDrawLogRepository;
-import com.daejeongwang.uoscrazydaejeon.repository.VisitRewardDrawLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.util.AppleUtil;
 import jakarta.transaction.Transactional;
@@ -27,7 +26,6 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RewardDrawLogRepository rewardDrawLogRepository;
-    private final VisitRewardDrawLogRepository visitRewardDrawLogRepository;
     private final ReceiptRepository receiptRepository;
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final PlacePhotoRepository placePhotoRepository;
@@ -129,7 +127,6 @@ public class MemberService {
         appleRefreshTokenRepository.deleteByUserId(memberId);
         refreshTokenRepository.deleteByUserId(memberId);
         rewardDrawLogRepository.deleteAllByMember_Id(memberId);
-        visitRewardDrawLogRepository.deleteAllByMember_Id(memberId);
         receiptRepository.deleteAllByVisitedPlace_Member_Id(memberId);
         visitedPlaceRepository.deleteAllByMember_Id(memberId);
         placePhotoRepository.deleteAllByMember_Id(memberId);

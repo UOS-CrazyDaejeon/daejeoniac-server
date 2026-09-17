@@ -5,7 +5,6 @@ import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RewardDrawLogRepository;
-import com.daejeongwang.uoscrazydaejeon.repository.VisitRewardDrawLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,6 @@ public class VisitedPlaceService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final ReceiptRepository receiptRepository;
     private final RewardDrawLogRepository rewardDrawLogRepository;
-    private final VisitRewardDrawLogRepository visitRewardDrawLogRepository;
     private final Clock clock;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
@@ -56,9 +54,6 @@ public class VisitedPlaceService {
         } else {
             usedReceiptIds = new java.util.HashSet<>(
                     rewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts)
-            );
-            usedReceiptIds.addAll(
-                    visitRewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts)
             );
         }
 

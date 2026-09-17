@@ -16,7 +16,7 @@ public interface RewardDrawLogRepository extends JpaRepository<RewardDrawLog, Lo
     @Query("select log.receipt.id from RewardDrawLog log where log.receipt in :receipts")
     List<Long> findUsedReceiptIdsByReceiptIn(@Param("receipts") List<Receipt> receipts);
 
-    @EntityGraph(attributePaths = {"receipt.visitedPlace.place", "rewardItem"})
+    @EntityGraph(attributePaths = {"receipt.visitedPlace.place", "rewardItem", "visitRewardItem"})
     List<RewardDrawLog> findAllByMember_IdOrderByCreatedAtDesc(Long memberId);
 
     void deleteAllByMember_Id(Long memberId);

@@ -19,7 +19,7 @@ public record RewardDrawLogResponse(
                 log.getId(),
                 log.getReceipt().getId(),
                 log.getReceipt().getVisitedPlace().getPlace().getPlaceName(),
-                log.getRewardItem().getId(),
+                log.getRewardItemId(),
                 log.getRewardItemType(),
                 log.getRewardValue(),
                 log.getCreatedAt()

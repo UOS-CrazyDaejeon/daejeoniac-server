@@ -35,8 +35,13 @@ public class RewardDrawLog {
 
     // 뭘 뽑았는지?
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reward_item_id", nullable = false)
+    @JoinColumn(name = "reward_item_id")
     private RewardItem rewardItem;
+
+    // 방문 인증 보상인 경우에만 사용
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visit_reward_item_id")
+    private VisitRewardItem visitRewardItem;
 
     // 어떤 영수증에 대한 뽑기인지?
     @OneToOne(fetch = FetchType.LAZY)
@@ -49,5 +54,9 @@ public class RewardDrawLog {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public Long getRewardItemId() {
+        return rewardItem != null ? rewardItem.getId() : visitRewardItem.getId();
     }
 }

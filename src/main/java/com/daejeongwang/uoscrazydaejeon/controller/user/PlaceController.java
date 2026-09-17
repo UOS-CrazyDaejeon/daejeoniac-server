@@ -107,8 +107,13 @@ public class PlaceController {
             Authentication authentication,
             @PathVariable Long placeId
     ) {
-        Long memberId = Long.valueOf(authentication.getName());
-        placeClickLogService.saveClickLog(memberId, placeId);
+        Long memberId = authentication != null
+                ? Long.valueOf(authentication.getName())
+                : null;
+
+        if (memberId != null) {
+            placeClickLogService.saveClickLog(memberId, placeId);
+        }
 
         PlaceDetailResponse response = placeService.getPlaceById(memberId, placeId);
 

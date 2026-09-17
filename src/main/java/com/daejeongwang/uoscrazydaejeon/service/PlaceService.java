@@ -195,9 +195,10 @@ public class PlaceService {
                 placeId, startOfDay, startOfNextDay
         );
 
-        boolean visitedToday = visitedPlaceRepository.existsByMember_IdAndPlace_IdAndVisitedDate(
-                memberId, placeId, today
-        );
+        boolean visitedToday = memberId != null
+                && visitedPlaceRepository.existsByMember_IdAndPlace_IdAndVisitedDate(
+                        memberId, placeId, today
+                );
         return PlaceDetailResponse.from(place, viewerCount, visitedToday);
     }
 

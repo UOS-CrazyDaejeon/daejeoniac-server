@@ -49,9 +49,11 @@ public class RewardDrawService {
             throw new IllegalStateException("이미 사용된 영수증입니다.");
         }
 
-        List<RewardItem> rewardItems = rewardItemRepository.findByCurrentStockGreaterThan(0);
+        List<RewardItem> rewardItems = rewardItemRepository.findAll();
+        if (rewardItems.isEmpty()) {
+            throw new IllegalStateException("등록된 영수증 보상이 없습니다.");
+        }
         RewardItem selectedRewardItem = randomSelectItem(rewardItems);
-        selectedRewardItem.decreaseStock();
         Member member = receipt.getVisitedPlace().getMember();
         member.addPoint(selectedRewardItem.getRewardValue());
 
@@ -77,14 +79,12 @@ public class RewardDrawService {
             throw new IllegalStateException("이미 사용된 방문 인증입니다.");
         }
 
-        List<VisitRewardItem> rewardItems = visitRewardItemRepository
-                .findByCurrentStockGreaterThanOrCurrentStockIsNull(0);
+        List<VisitRewardItem> rewardItems = visitRewardItemRepository.findAll();
         if (rewardItems.isEmpty()) {
             throw new IllegalStateException("등록된 방문 보상이 없습니다.");
         }
 
         VisitRewardItem selectedRewardItem = randomSelectVisitItem(rewardItems);
-        selectedRewardItem.decreaseStock();
 
         Member member = receipt.getVisitedPlace().getMember();
         member.addPoint(selectedRewardItem.getRewardValue());

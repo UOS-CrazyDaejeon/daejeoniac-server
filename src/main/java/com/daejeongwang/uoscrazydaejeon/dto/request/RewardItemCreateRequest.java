@@ -6,7 +6,6 @@ import lombok.Getter;
 public record  RewardItemCreateRequest(
    Double prbability,
    RewardItem.RewardItemType itemType,
-   Integer rewardValue,
-   Integer totalStock
+   Integer rewardValue
 ) {
 }

@@ -33,31 +33,13 @@ public class VisitRewardItem {
 
     private Integer rewardValue;
 
-    private Integer totalStock;
-
-    private Integer currentStock;
-
     public void update(
             Double probability,
             RewardItem.RewardItemType itemType,
-            Integer rewardValue,
-            Integer totalStock,
-            Integer currentStock
+            Integer rewardValue
     ) {
         this.probability = probability;
         this.itemType = itemType;
         this.rewardValue = rewardValue;
-        this.totalStock = totalStock;
-        this.currentStock = currentStock;
-    }
-
-    public void decreaseStock() {
-        if (currentStock != null && currentStock <= 0) {
-            throw new IllegalStateException("방문 보상 재고가 없습니다.");
-        }
-
-        if (currentStock != null) {
-            currentStock--;
-        }
     }
 }

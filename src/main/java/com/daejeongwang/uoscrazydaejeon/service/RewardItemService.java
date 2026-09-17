@@ -26,8 +26,6 @@ public class RewardItemService {
                 // 현재는 POINT로 고정
                 .itemType(RewardItem.RewardItemType.POINT)
                 .rewardValue(request.rewardValue())
-                .totalStock(request.totalStock())
-                .currentStock(request.totalStock())
                 .build();
 
         return rewardItemRepsitory.save(rewardItem);
@@ -44,9 +42,7 @@ public class RewardItemService {
 
         rewardItem.updateRewardItem(
                 request.probability(),
-                request.rewardValue(),
-                request.totalStock(),
-                request.currentStock()
+                request.rewardValue()
         );
 
         return rewardItem;

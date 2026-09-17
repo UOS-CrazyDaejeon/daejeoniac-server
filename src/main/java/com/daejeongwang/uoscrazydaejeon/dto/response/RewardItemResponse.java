@@ -4,14 +4,12 @@ import com.daejeongwang.uoscrazydaejeon.entity.RewardItem;
 
 public record RewardItemResponse(
         RewardItem.RewardItemType itemType,
-        Integer rewardValue,
-        Integer currentStock
+        Integer rewardValue
 ) {
     public static RewardItemResponse from(RewardItem rewardItem) {
         return new RewardItemResponse(
                 rewardItem.getItemType(),
-                rewardItem.getRewardValue(),
-                rewardItem.getCurrentStock()
+                rewardItem.getRewardValue()
         );
     }
 

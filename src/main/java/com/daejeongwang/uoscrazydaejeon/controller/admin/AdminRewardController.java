@@ -4,8 +4,12 @@ import com.daejeongwang.uoscrazydaejeon.config.SwaggerExamples;
 import com.daejeongwang.uoscrazydaejeon.dto.ResultDto;
 import com.daejeongwang.uoscrazydaejeon.dto.request.RewardItemCreateRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.request.RewardItemUpdateRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.request.VisitRewardItemCreateRequest;
+import com.daejeongwang.uoscrazydaejeon.dto.request.VisitRewardItemUpdateRequest;
 import com.daejeongwang.uoscrazydaejeon.entity.RewardItem;
+import com.daejeongwang.uoscrazydaejeon.entity.VisitRewardItem;
 import com.daejeongwang.uoscrazydaejeon.service.RewardItemService;
+import com.daejeongwang.uoscrazydaejeon.service.VisitRewardItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -17,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin/rewards")
@@ -24,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminRewardController {
 
     private final RewardItemService rewardItemService;
+    private final VisitRewardItemService visitRewardItemService;
 
     // 새 상품 등록
     @PostMapping("/save")
@@ -81,6 +88,29 @@ public class AdminRewardController {
         RewardItem response = rewardItemService.updateRewardItem(rewardItemId, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/visit-rewards")
+    @Operation(summary = "방문 보상 목록 조회", description = "방문 인증 장소에 사용되는 보상 목록을 조회합니다.")
+    public ResponseEntity<List<VisitRewardItem>> findAllVisitRewards() {
+        return ResponseEntity.ok(visitRewardItemService.findAll());
+    }
+
+    @PostMapping("/visit-rewards")
+    @Operation(summary = "방문 보상 등록", description = "방문 인증 장소에 사용되는 보상을 등록합니다.")
+    public ResponseEntity<VisitRewardItem> saveVisitReward(
+            @RequestBody VisitRewardItemCreateRequest request
+    ) {
+        return ResponseEntity.ok(visitRewardItemService.create(request));
+    }
+
+    @PatchMapping("/visit-rewards/{visitRewardItemId}")
+    @Operation(summary = "방문 보상 수정", description = "방문 인증 장소에 사용되는 보상 정보를 수정합니다.")
+    public ResponseEntity<VisitRewardItem> updateVisitReward(
+            @PathVariable Long visitRewardItemId,
+            @RequestBody VisitRewardItemUpdateRequest request
+    ) {
+        return ResponseEntity.ok(visitRewardItemService.update(visitRewardItemId, request));
     }
 
 }

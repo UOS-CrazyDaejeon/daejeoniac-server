@@ -25,6 +25,11 @@ public class Receipt {
         FAILED
     }
 
+    public enum VerificationType {
+        VISIT,
+        RECEIPT
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "receipt_id")
@@ -55,11 +60,31 @@ public class Receipt {
     @Column(nullable = false)
     private OcrStatus ocrStatus = OcrStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'RECEIPT'")
+    private VerificationType verificationType = VerificationType.RECEIPT;
+
     private String ocrPlaceName;
 
     private String ocrPlaceAddress;
 
     private Instant ocrPaidAt;
+
+    public static Receipt createVisitReceipt(VisitedPlace visitedPlace, Instant now) {
+        UUID receiptUuid = UUID.randomUUID();
+
+        return Receipt.builder()
+                .visitedPlace(visitedPlace)
+                .receiptUuid(receiptUuid)
+                .objectKey("receipt/visit-verification/" + receiptUuid)
+                .requestedAt(now)
+                .verifiedAt(now)
+                .verifyStatus(ReceiptStatus.APPROVED)
+                .ocrStatus(OcrStatus.SUCCESS)
+                .verificationType(VerificationType.VISIT)
+                .build();
+    }
 
     public void ocrSuccess(
             String ocrPlaceName,

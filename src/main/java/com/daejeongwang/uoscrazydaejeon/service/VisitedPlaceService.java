@@ -5,6 +5,7 @@ import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.RewardDrawLogRepository;
+import com.daejeongwang.uoscrazydaejeon.repository.VisitRewardDrawLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class VisitedPlaceService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final ReceiptRepository receiptRepository;
     private final RewardDrawLogRepository rewardDrawLogRepository;
+    private final VisitRewardDrawLogRepository visitRewardDrawLogRepository;
     private final Clock clock;
 
     private static final Duration PENDING_VALID_DURATION = Duration.ofMinutes(5);
@@ -48,9 +50,17 @@ public class VisitedPlaceService {
         Map<Long, List<Receipt>> receiptMap = receipts.stream().collect(Collectors.groupingBy(
                 receipt -> receipt.getVisitedPlace().getId()
         ));
-        Set<Long> usedReceiptIds = receipts.isEmpty()
-                ? Set.of()
-                : Set.copyOf(rewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts));
+        Set<Long> usedReceiptIds;
+        if (receipts.isEmpty()) {
+            usedReceiptIds = Set.of();
+        } else {
+            usedReceiptIds = new java.util.HashSet<>(
+                    rewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts)
+            );
+            usedReceiptIds.addAll(
+                    visitRewardDrawLogRepository.findUsedReceiptIdsByReceiptIn(receipts)
+            );
+        }
 
         return visitedPlaces.stream()
                 .map(visitedPlace -> VisitedPlaceListResponse.builder()

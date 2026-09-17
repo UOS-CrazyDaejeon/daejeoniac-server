@@ -85,6 +85,7 @@ public class ReceiptService {
                 .receiptUuid(receiptUuid)
                 .objectKey(objectKey)
                 .requestedAt(clock.instant())
+                .verificationType(Receipt.VerificationType.RECEIPT)
                 .build();
 
         Receipt savedReceipt = receiptRepository.save(receipt);
@@ -139,6 +140,7 @@ public class ReceiptService {
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
                 .ocrStatus(receipt.getOcrStatus())
+                .verificationType(receipt.getVerificationType())
                 .gachaAvailable(gachaAvailable)
                 .build();
 
@@ -204,6 +206,7 @@ public class ReceiptService {
                 .placeName(receipt.getVisitedPlace().getPlace().getPlaceName())
                 .verifyStatus(receipt.getVerifyStatus())
                 .ocrStatus(receipt.getOcrStatus())
+                .verificationType(receipt.getVerificationType())
                 .gachaAvailable(
                         receipt.getVerifyStatus() == Receipt.ReceiptStatus.APPROVED
                 )

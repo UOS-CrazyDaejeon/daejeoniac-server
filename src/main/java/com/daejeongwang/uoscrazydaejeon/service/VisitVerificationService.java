@@ -4,11 +4,13 @@ import com.daejeongwang.uoscrazydaejeon.dto.request.VisitVerificationRequest;
 import com.daejeongwang.uoscrazydaejeon.dto.response.VisitVerificationResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Member;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
+import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
 import com.daejeongwang.uoscrazydaejeon.entity.VisitedPlace;
 import com.daejeongwang.uoscrazydaejeon.exception.ConflictException;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.MemberRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
+import com.daejeongwang.uoscrazydaejeon.repository.ReceiptRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +21,7 @@ import java.time.LocalDate;
 import java.time.Instant;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ public class VisitVerificationService {
     private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
 
     private final VisitedPlaceRepository visitedPlaceRepository;
+    private final ReceiptRepository receiptRepository;
     private final PlaceRepository placeRepository;
     private final MemberRepository memberRepository;
     private final PlaceProximityVerifier placeProximityVerifier;
@@ -80,11 +84,43 @@ public class VisitVerificationService {
             throw new ConflictException("이미 방문한 장소입니다.", e);
         }
 
-        return VisitVerificationResponse.builder()
+        Receipt visitReceipt = null;
+        if (isNonConsumerPlace(place)) {
+            visitReceipt = receiptRepository.save(
+                    Receipt.createVisitReceipt(savedVisitedPlace, now)
+            );
+        }
+
+        VisitVerificationResponse.VisitVerificationResponseBuilder response = VisitVerificationResponse.builder()
                 .visitedPlaceId(savedVisitedPlace.getId())
                 .placeId(place.getId())
-                .visitedAt(savedVisitedPlace.getVisitedAt())
-                .build();
+                .visitedAt(savedVisitedPlace.getVisitedAt());
+
+        if (visitReceipt != null) {
+            response.receiptId(visitReceipt.getId())
+                    .receiptUuid(visitReceipt.getReceiptUuid())
+                    .objectKey(visitReceipt.getObjectKey())
+                    .requestedAt(visitReceipt.getRequestedAt())
+                    .verifiedAt(visitReceipt.getVerifiedAt())
+                    .verifyStatus(visitReceipt.getVerifyStatus())
+                    .ocrStatus(visitReceipt.getOcrStatus())
+                    .verificationType(visitReceipt.getVerificationType());
+        }
+
+        return response.build();
+    }
+
+    private boolean isNonConsumerPlace(Place place) {
+        String categorySmall = place.getCategorySmall();
+        if (categorySmall == null || categorySmall.isBlank()) {
+            return false;
+        }
+
+        return Set.of(
+                "공원", "생태공원", "산", "숲", "자연휴양림",
+                "하천", "호수", "저수지", "산책로", "광장",
+                "둘레길", "전망대"
+        ).contains(categorySmall.trim());
     }
 
 

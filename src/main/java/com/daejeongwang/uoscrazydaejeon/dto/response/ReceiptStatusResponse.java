@@ -16,6 +16,7 @@ public class ReceiptStatusResponse {
     private String placeName;
     private Receipt.ReceiptStatus verifyStatus;
     private Receipt.OcrStatus ocrStatus;
+    private Receipt.VerificationType verificationType;
     boolean gachaAvailable;
 
     // TODO: OCR 원문 정보 임시 노출. 프론트 계약 확정 후 전용 응답 DTO로 정리한다.

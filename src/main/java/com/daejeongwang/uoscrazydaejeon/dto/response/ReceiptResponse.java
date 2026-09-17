@@ -11,6 +11,7 @@ public record ReceiptResponse(
         String placeName,
         Receipt.ReceiptStatus verifyStatus,
         Receipt.OcrStatus ocrStatus,
+        Receipt.VerificationType verificationType,
         Instant requestedAt,
         Instant verifiedAt,
         Boolean rewardDrawAvailable
@@ -25,6 +26,7 @@ public record ReceiptResponse(
                 receipt.getVisitedPlace().getPlace().getPlaceName(),
                 receipt.getVerifyStatus(),
                 receipt.getOcrStatus(),
+                receipt.getVerificationType(),
                 receipt.getRequestedAt(),
                 receipt.getVerifiedAt(),
                 rewardDrawAvailable

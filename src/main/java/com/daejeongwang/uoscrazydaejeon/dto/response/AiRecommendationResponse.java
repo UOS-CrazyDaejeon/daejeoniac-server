@@ -2,9 +2,11 @@ package com.daejeongwang.uoscrazydaejeon.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import tools.jackson.databind.JsonNode;
 
 import java.util.stream.StreamSupport;
@@ -36,6 +38,9 @@ public class AiRecommendationResponse {
     @JsonProperty("recommendation_reason")
     @JsonAlias("similarity_reason")
     private String recommendationReason;
+
+    @Setter
+    private Long viewerCount;
 
     @JsonProperty("tags")
     public void setTags(JsonNode tags) {

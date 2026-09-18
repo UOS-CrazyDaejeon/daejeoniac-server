@@ -14,6 +14,7 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.RecommendedPlaceResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.daejeongwang.uoscrazydaejeon.exception.ResourceNotFoundException;
 import com.daejeongwang.uoscrazydaejeon.repository.CongestionRepository;
+import com.daejeongwang.uoscrazydaejeon.repository.PlaceClickLogRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.PlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitedPlaceRepository;
 import com.daejeongwang.uoscrazydaejeon.repository.VisitorCountRepository;
@@ -25,7 +26,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,7 @@ public class RecommendationService {
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final CongestionRepository congestionRepository;
     private final VisitorCountRepository visitorCountRepository;
+    private final PlaceClickLogRepository placeClickLogRepository;
     private final AiServerClient aiServerClient;
     private final RecommendationSessionService recommendationSessionService;
     private final Clock clock;
@@ -49,6 +53,7 @@ public class RecommendationService {
         if (response == null || response.getSimilarPlaces() == null) {
             throw new IllegalStateException("AI 추천 응답이 올바르지 않습니다.");
         }
+        addViewerCounts(response.getSimilarPlaces());
 
         RecommendationSession session = RecommendationSession.builder()
                 .memberId(memberId)
@@ -70,6 +75,7 @@ public class RecommendationService {
         if (response == null || response.getNextPlaces() == null) {
             throw new IllegalStateException("AI 추천 응답이 올바르지 않습니다.");
         }
+        addViewerCounts(response.getNextPlaces());
 
         RecommendationSession session = RecommendationSession.builder()
                 .memberId(memberId)
@@ -210,5 +216,30 @@ public class RecommendationService {
                         .reason(item.getRecommendationReason())
                         .build())
                 .toList();
+    }
+
+    private void addViewerCounts(List<AiRecommendationResponse> recommendations) {
+        List<Long> placeIds = recommendations.stream()
+                .map(AiRecommendationResponse::getPlaceId)
+                .filter(placeId -> placeId != null)
+                .distinct()
+                .toList();
+
+        LocalDate today = LocalDate.now(clock.withZone(SEOUL));
+        Map<Long, Long> viewerCountsByPlaceId = placeIds.isEmpty()
+                ? Map.of()
+                : placeClickLogRepository.countByPlaceIdsAndClickedAtBetween(
+                                placeIds,
+                                today.atStartOfDay(),
+                                today.plusDays(1).atStartOfDay()
+                        ).stream()
+                        .collect(Collectors.toMap(
+                                PlaceClickLogRepository.PlaceClickCount::getPlaceId,
+                                PlaceClickLogRepository.PlaceClickCount::getViewerCount
+                        ));
+
+        recommendations.forEach(recommendation -> recommendation.setViewerCount(
+                viewerCountsByPlaceId.getOrDefault(recommendation.getPlaceId(), 0L)
+        ));
     }
 }

@@ -239,16 +239,17 @@ public class AuthService {
     }
 
     private String createDefaultNickname(String providerId) {
-        String suffix = providerId == null ? String.valueOf(System.currentTimeMillis()) : providerId;
-        if (suffix.length() > 8) {
-            suffix = suffix.substring(suffix.length() - 8);
-        }
+//        String suffix = providerId == null ? String.valueOf(System.currentTimeMillis()) : providerId;
+//        if (suffix.length() > 8) {
+//            suffix = suffix.substring(suffix.length() - 8);
+//        }
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
         String adjective = NICKNAME_ADJECTIVES.get(random.nextInt(NICKNAME_ADJECTIVES.size()));
         String noun = NICKNAME_NOUNS.get(random.nextInt(NICKNAME_NOUNS.size()));
 
-        return adjective + noun + "_" + suffix;
+//        return adjective + noun + "_" + suffix;
+        return adjective + noun;
     }
 
     private String defaultIfBlank(String value, String defaultValue) {

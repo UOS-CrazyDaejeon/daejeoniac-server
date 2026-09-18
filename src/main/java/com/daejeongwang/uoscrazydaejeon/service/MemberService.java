@@ -63,11 +63,11 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
 
-        memberRepository.findByNickname(request.nickname())
-                .filter(existingMember -> !existingMember.getId().equals(memberId))
-                .ifPresent(existingMember -> {
-                    throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
-                });
+//        memberRepository.findByNickname(request.nickname())
+//                .filter(existingMember -> !existingMember.getId().equals(memberId))
+//                .ifPresent(existingMember -> {
+//                    throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+//                });
 
         member.updateProfile(request.nickname());
 

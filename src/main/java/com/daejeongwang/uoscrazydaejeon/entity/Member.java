@@ -29,7 +29,6 @@ public class Member {
 
     private String memberName;
 
-    @Column(unique = true)
     private String nickname;
 
     private LocalDateTime createdAt;

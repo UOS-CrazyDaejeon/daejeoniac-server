@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationSessionService {
     private static final String SESSION_KEY_PREFIX = "recommendation:session:";
+    private static final String MEMBER_PLACE_SESSION_KEY_PREFIX = "recommendation:next-place:";
     private static final Duration SESSION_TTL = Duration.ofDays(1);
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
@@ -41,6 +42,31 @@ public class RecommendationSessionService {
         redisTemplate.opsForValue().set(sessionKey, session, SESSION_TTL);
 
         return sessionId;
+    }
+
+    public UUID saveNextPlacesSession(RecommendationSession session) {
+        UUID sessionId = saveSession(session);
+
+        session.getRecommendations().stream()
+                .map(recommendation -> recommendation.getPlaceId())
+                .distinct()
+                .forEach(placeId -> redisTemplate.opsForValue().set(
+                        createMemberPlaceSessionKey(session.getMemberId(), placeId),
+                        sessionId,
+                        SESSION_TTL
+                ));
+
+        return sessionId;
+    }
+
+    public UUID getNextPlacesSessionId(Long memberId, Long placeId) {
+        Object value = redisTemplate.opsForValue().get(createMemberPlaceSessionKey(memberId, placeId));
+
+        return value instanceof UUID sessionId ? sessionId : null;
+    }
+
+    private String createMemberPlaceSessionKey(Long memberId, Long placeId) {
+        return MEMBER_PLACE_SESSION_KEY_PREFIX + memberId + ":place:" + placeId;
     }
 
     public RecommendationSessionResponse getSession(Long memberId, UUID sessionId) {
@@ -101,4 +127,3 @@ public class RecommendationSessionService {
         );
     }
 }
-

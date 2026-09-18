@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -44,6 +45,7 @@ public class PlaceService {
     private final PlaceClickLogRepository placeClickLogRepository;
     private final VisitedPlaceRepository visitedPlaceRepository;
     private final Clock clock;
+    private final RecommendationSessionService recommendationSessionService;
 
     // Admin Place API Service
     @Transactional
@@ -187,6 +189,10 @@ public class PlaceService {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new ResourceNotFoundException("장소를 찾을 수 없습니다."));
 
+        UUID sessionId = memberId == null
+                ? null
+                : recommendationSessionService.getNextPlacesSessionId(memberId, placeId);
+
         LocalDate today = LocalDate.now(clock.withZone(ZoneId.of("Asia/Seoul")));
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime startOfNextDay = today.plusDays(1).atStartOfDay();
@@ -199,7 +205,7 @@ public class PlaceService {
                 && visitedPlaceRepository.existsByMember_IdAndPlace_IdAndVisitedDate(
                         memberId, placeId, today
                 );
-        return PlaceDetailResponse.from(place, viewerCount, visitedToday);
+        return PlaceDetailResponse.from(place, viewerCount, visitedToday, sessionId);
     }
 
     // 특정 장소 근처의 장소 조회

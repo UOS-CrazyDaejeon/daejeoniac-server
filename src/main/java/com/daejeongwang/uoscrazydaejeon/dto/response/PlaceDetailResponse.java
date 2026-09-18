@@ -2,9 +2,12 @@ package com.daejeongwang.uoscrazydaejeon.dto.response;
 
 import com.daejeongwang.uoscrazydaejeon.entity.Place;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -50,7 +53,11 @@ public class PlaceDetailResponse {
     @Schema(description = "로그인한 사용자의 한국 날짜 기준 오늘 방문 인증 여부", example = "true")
     private boolean visitedToday;
 
-    public static PlaceDetailResponse from(Place place, Long viewerCount, boolean visitedToday) {
+    @Schema(description = "다음 장소 추천을 통해 조회한 경우의 추천 세션 ID", example = "550e8400-e29b-41d4-a716-446655440000")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private UUID sessionId;
+
+    public static PlaceDetailResponse from(Place place, Long viewerCount, boolean visitedToday, UUID sessionId) {
 
         return new PlaceDetailResponse(
                 place.getId(),
@@ -65,7 +72,8 @@ public class PlaceDetailResponse {
                 place.getCategoryMedium(),
                 place.getCategorySmall(),
                 viewerCount,
-                visitedToday
+                visitedToday,
+                sessionId
         );
     }
 }

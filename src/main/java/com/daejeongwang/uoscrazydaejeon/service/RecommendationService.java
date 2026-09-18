@@ -78,7 +78,7 @@ public class RecommendationService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        UUID sessionId = recommendationSessionService.saveSession(session);
+        UUID sessionId = recommendationSessionService.saveNextPlacesSession(session);
         response.setSessionId(sessionId);
 
         return response;

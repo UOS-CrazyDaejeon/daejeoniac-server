@@ -16,7 +16,6 @@ public interface PlaceClickLogRepository extends JpaRepository<PlaceClickLog, Lo
         Long getViewerCount();
     }
 
-    long countByPlace_Id(Long placeId);
     long countByPlace_IdAndClickedAtGreaterThanEqualAndClickedAtLessThan(
             Long placeId,
             LocalDateTime startOfDay,

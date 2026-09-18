@@ -56,7 +56,7 @@ public class PlaceClickLogController {
     }
 
     @GetMapping("/{placeId}/click-count")
-    @Operation(summary = "장소 별 클릭 로그 조회 API", description = "특정 장소가 클릭된 횟수를 조회합니다.")
+    @Operation(summary = "장소 별 클릭 로그 조회 API", description = "특정 장소의 한국 날짜 기준 오늘 클릭 횟수를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "클릭 횟수 조회 성공", content = @Content),
             @ApiResponse(responseCode = "400", description = "잘못된 장소 ID",

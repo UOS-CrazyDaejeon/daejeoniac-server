@@ -38,7 +38,7 @@ public class RewardDrawService {
             throw new IllegalStateException("승인된 영수증만 뽑기할 수 있습니다.");
         }
 
-        if (receipt.getVerificationType() == Receipt.VerificationType.VISIT) {
+        if (receipt.getVerificationType() == Receipt.VerificationType.PASSED) {
             return drawVisitReward(memberId, receipt);
         }
 

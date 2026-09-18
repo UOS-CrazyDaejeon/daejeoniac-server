@@ -107,7 +107,7 @@ public class VisitedPlaceService {
                 .anyMatch(receipt -> !usedReceiptIds.contains(receipt.getId()));
         if (hasUnusedApprovedReceipt) {
             boolean hasUnusedVisitReceipt = approvedReceipts.stream()
-                    .anyMatch(receipt -> receipt.getVerificationType() == Receipt.VerificationType.VISIT
+                    .anyMatch(receipt -> receipt.getVerificationType() == Receipt.VerificationType.PASSED
                             && !usedReceiptIds.contains(receipt.getId()));
             if (hasUnusedVisitReceipt) {
                 return VisitedPlaceListResponse.ReceiptAvailability.PASSED;

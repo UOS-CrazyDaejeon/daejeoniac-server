@@ -47,14 +47,11 @@ public class RecommendationSessionService {
     public UUID saveNextPlacesSession(RecommendationSession session) {
         UUID sessionId = saveSession(session);
 
-        session.getRecommendations().stream()
-                .map(recommendation -> recommendation.getPlaceId())
-                .distinct()
-                .forEach(placeId -> redisTemplate.opsForValue().set(
-                        createMemberPlaceSessionKey(session.getMemberId(), placeId),
-                        sessionId,
-                        SESSION_TTL
-                ));
+        redisTemplate.opsForValue().set(
+                createMemberPlaceSessionKey(session.getMemberId(), session.getParentPlaceId()),
+                sessionId,
+                SESSION_TTL
+        );
 
         return sessionId;
     }

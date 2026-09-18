@@ -49,7 +49,7 @@ public class RecommendationSessionService {
 
         redisTemplate.opsForValue().set(
                 createMemberPlaceSessionKey(session.getMemberId(), session.getParentPlaceId()),
-                sessionId,
+                sessionId.toString(),
                 SESSION_TTL
         );
 
@@ -59,7 +59,19 @@ public class RecommendationSessionService {
     public UUID getNextPlacesSessionId(Long memberId, Long placeId) {
         Object value = redisTemplate.opsForValue().get(createMemberPlaceSessionKey(memberId, placeId));
 
-        return value instanceof UUID sessionId ? sessionId : null;
+        if (value instanceof UUID sessionId) {
+            return sessionId;
+        }
+
+        if (value instanceof String sessionId) {
+            try {
+                return UUID.fromString(sessionId);
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private String createMemberPlaceSessionKey(Long memberId, Long placeId) {

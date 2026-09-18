@@ -119,7 +119,7 @@ public class VisitVerificationService {
         return Set.of(
                 "공원", "생태공원", "산", "숲", "자연휴양림",
                 "하천", "호수", "저수지", "산책로", "광장",
-                "둘레길", "전망대"
+                "둘레길", "전망대", "도시근린공원"
         ).contains(categorySmall.trim());
     }
 

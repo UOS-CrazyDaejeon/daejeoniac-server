@@ -26,7 +26,8 @@ public class Receipt {
     }
 
     public enum VerificationType {
-        VISIT,
+//        VISIT,
+        PASSED,
         RECEIPT
     }
 
@@ -82,7 +83,7 @@ public class Receipt {
                 .verifiedAt(now)
                 .verifyStatus(ReceiptStatus.APPROVED)
                 .ocrStatus(OcrStatus.SUCCESS)
-                .verificationType(VerificationType.VISIT)
+                .verificationType(VerificationType.PASSED)
                 .build();
     }
 

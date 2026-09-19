@@ -8,9 +8,9 @@ import com.daejeongwang.uoscrazydaejeon.dto.response.AiNextPlacesRecommendationR
 import com.daejeongwang.uoscrazydaejeon.dto.response.AiSimilarRecommendationResponse;
 import com.daejeongwang.uoscrazydaejeon.dto.response.api.ReceiptOcrResultResponse;
 import com.daejeongwang.uoscrazydaejeon.entity.Receipt;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -35,12 +35,12 @@ import java.util.UUID;
 @Slf4j
 public class AiServerClient {
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonMapper objectMapper;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
 
-    public AiServerClient() {
+    public AiServerClient(JsonMapper objectMapper) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 
         //AI server connect timeout
@@ -48,6 +48,7 @@ public class AiServerClient {
         //AI server response timeout
         factory.setReadTimeout(Duration.ofSeconds(60));
 
+        this.objectMapper = objectMapper;
         this.restTemplate = new RestTemplate(factory);
     }
 
@@ -97,7 +98,7 @@ public class AiServerClient {
                 if (!message.isBlank()) {
                     return message;
                 }
-            } catch (JsonProcessingException ignored) {}
+            } catch (JacksonException ignored) {}
         }
 
         return exception.getMessage();
@@ -171,7 +172,7 @@ public class AiServerClient {
     private void logAiRequest(String url, Object request) {
         try {
             log.info("AI server request url={}, body={}", url, objectMapper.writeValueAsString(request));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Failed to serialize AI server request body", e);
         }
     }
@@ -185,7 +186,7 @@ public class AiServerClient {
                     e.getResponseBodyAsString(),
                     objectMapper.writeValueAsString(request)
             );
-        } catch (JsonProcessingException jsonException) {
+        } catch (JacksonException jsonException) {
             log.error(
                     "AI server {} failed. status={}, responseBody={}",
                     name,

@@ -76,6 +76,8 @@ public class ReceiptService {
         String extension = switch(contentType) {
             case "image/jpeg" -> "jpg";
             case "image/png" -> "png";
+            case "image/heic" -> "heic";
+            case "image/heif" -> "heif";
             default -> throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
         };
         String objectKey = "receipt/" + receiptUuid + "." + extension;
@@ -323,6 +325,12 @@ public class ReceiptService {
         }
         if (objectKey.endsWith(".png")) {
             return "image/png";
+        }
+        if (objectKey.endsWith(".heic")) {
+            return "image/heic";
+        }
+        if (objectKey.endsWith(".heif")) {
+            return "image/heif";
         }
         throw new UnsupportedMediaTypeException("지원하지 않는 이미지 형식입니다.");
     }

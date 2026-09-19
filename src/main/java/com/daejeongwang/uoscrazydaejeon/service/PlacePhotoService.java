@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -28,6 +29,12 @@ import java.util.UUID;
 public class PlacePhotoService {
     private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_1 = 3L;
     private static final long GPS_VERIFICATION_BYPASS_MEMBER_ID_2 = 6L;
+    private static final Set<String> SUPPORTED_IMAGE_CONTENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/heic",
+            "image/heif"
+    );
 
     private final PlacePhotoRepository placePhotoRepository;
     private final MemberRepository memberRepository;
@@ -55,7 +62,7 @@ public class PlacePhotoService {
         }
 
         String contentType = image.getContentType();
-        if (!List.of("image/jpeg", "image/png").contains(contentType)) {
+        if (!SUPPORTED_IMAGE_CONTENT_TYPES.contains(contentType)) {
             throw new UnsupportedMediaTypeException(
                     "지원하지 않는 이미지 형식입니다."
             );
@@ -111,7 +118,7 @@ public class PlacePhotoService {
         }
 
         String contentType = image.getContentType();
-        if (!List.of("image/jpeg", "image/png").contains(contentType)) {
+        if (!SUPPORTED_IMAGE_CONTENT_TYPES.contains(contentType)) {
             throw new UnsupportedMediaTypeException(
                     "지원하지 않는 이미지 형식입니다."
             );

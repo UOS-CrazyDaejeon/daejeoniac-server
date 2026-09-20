@@ -39,7 +39,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/api/v1/places/{placeId}"
+                                "/api/v1/places/{placeId}",
+                                "/api/v1/places/top-visitors"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",

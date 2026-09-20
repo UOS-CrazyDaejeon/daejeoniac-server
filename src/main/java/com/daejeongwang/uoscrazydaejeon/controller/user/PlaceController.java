@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -174,11 +175,15 @@ public class PlaceController {
             @RequestParam Double latitude,
             @RequestParam Double longitude
     ) {
-        Long memberId = Long.valueOf(authentication.getName());
-        if (memberId == LOCATION_BYPASS_MEMBER_ID_1
-                || memberId == LOCATION_BYPASS_MEMBER_ID_2) {
-            latitude = FIXED_LATITUDE;
-            longitude = FIXED_LONGITUDE;
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            Long memberId = Long.valueOf(authentication.getName());
+            if (memberId == LOCATION_BYPASS_MEMBER_ID_1
+                    || memberId == LOCATION_BYPASS_MEMBER_ID_2) {
+                latitude = FIXED_LATITUDE;
+                longitude = FIXED_LONGITUDE;
+            }
         }
 
         return ResponseEntity.ok(

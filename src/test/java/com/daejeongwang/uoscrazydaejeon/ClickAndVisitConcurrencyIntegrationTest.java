@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
  * MySQL generated column을 동일하게 검증할 수 없다.
  */
 @DataJpaTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.hibernate.ddl-auto=create", // disposable MySQL container is removed after tests
         "spring.jpa.show-sql=false"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
